@@ -1,107 +1,113 @@
 import QtQuick
+import QtQuick.Layouts
 
 Item {
     id: root
     required property var theme
 
     Column {
+        id: menuColumn
         anchors.fill: parent
         anchors.margins: 8
         spacing: 0
 
-        Row {
+        // 菜单项模板 - 带箭头
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "📋"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
                 text: "活动记录"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "⚡"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
                 text: "个性化智能服务"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "📥"
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
-                anchors.rightMargin: 40
-                text: "将记忆导入 vAssist"
                 color: theme.textPrimary
-                font.pixelSize: 14
+                font.pixelSize: 16
+                Layout.preferredWidth: 24
+                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.right: parent.right
+                text: "将记忆导入 vAssist"
+                color: theme.textPrimary
+                font.pixelSize: 14
+                Layout.fillWidth: true
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
                 text: "新"
                 color: "#1a73e8"
                 font.pixelSize: 11
                 font.weight: Font.Medium
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "📊"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
                 text: "用量限额"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -112,84 +118,85 @@ Item {
             color: theme.inputBorder
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "🌙"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
-                anchors.rightMargin: 20
                 text: "主题"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.right: parent.right
                 text: "›"
                 color: theme.textMuted
                 font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "📺"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
-                anchors.rightMargin: 20
                 text: "主题订阅"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.right: parent.right
                 text: "›"
                 color: theme.textMuted
                 font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "📖"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
                 text: "查看订阅"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -200,55 +207,56 @@ Item {
             color: theme.inputBorder
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "💬"
+                color: theme.textPrimary
                 font.pixelSize: 16
+                Layout.preferredWidth: 24
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
                 text: "发送反馈"
                 color: theme.textPrimary
                 font.pixelSize: 14
+                Layout.fillWidth: true
                 verticalAlignment: Text.AlignVCenter
             }
         }
 
-        Row {
+        RowLayout {
             width: parent.width
             height: 40
-            spacing: 12
+            spacing: 10
 
             Text {
-                width: 20
                 text: "❓"
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-            }
-
-            Text {
-                anchors.fill: parent
-                anchors.leftMargin: 32
-                anchors.rightMargin: 20
-                text: "帮助"
                 color: theme.textPrimary
-                font.pixelSize: 14
+                font.pixelSize: 16
+                Layout.preferredWidth: 24
+                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
             Text {
-                anchors.right: parent.right
+                text: "帮助"
+                color: theme.textPrimary
+                font.pixelSize: 14
+                Layout.fillWidth: true
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
                 text: "›"
                 color: theme.textMuted
                 font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
@@ -260,14 +268,16 @@ Item {
 
         Column {
             width: parent.width
-            padding: 8
+            topPadding: 8
 
             Text {
                 width: parent.width
-                text: "这是一个测试"
+                text: "this is text.."
                 color: "#1a73e8"
                 font.pixelSize: 13
                 font.weight: Font.Medium
+                anchors.left: parent.left
+                anchors.leftMargin: 34
             }
         }
     }
