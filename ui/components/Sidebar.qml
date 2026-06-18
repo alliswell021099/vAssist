@@ -299,7 +299,6 @@ Item {
                 }
 
                 onClicked: {
-                    root.showSettingsMenu = !root.showSettingsMenu
                     root.settingsMenuToggled()
                 }
             }

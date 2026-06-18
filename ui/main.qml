@@ -242,12 +242,8 @@ ApplicationWindow {
                 onConversationDeleted: function(index) { root.deleteConversation(index) }
                 onNewConversationRequested: root.createNewConversation()
                 onSettingsMenuToggled: {
-                if (sidebar.showSettingsMenu) {
-                    settingsPopup.open()
-                } else {
-                    settingsPopup.close()
+                    settingsPopup.visible = !settingsPopup.visible
                 }
-            }
             }
         }
 
@@ -348,6 +344,21 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        id: settingsMask
+        anchors.fill: parent
+        color: "transparent"
+        visible: settingsPopup.visible
+        z: 99
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                settingsPopup.visible = false
+            }
+        }
+    }
+
     Popup {
         id: settingsPopup
         parent: Overlay.overlay
@@ -356,8 +367,8 @@ ApplicationWindow {
         width: 280
         height: 420
         modal: false
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        focus: false
+        closePolicy: Popup.CloseOnEscape
 
         background: Rectangle {
             color: "#252526"
@@ -369,10 +380,6 @@ ApplicationWindow {
         SettingsMenu {
             anchors.fill: parent
             theme: root.theme
-        }
-
-        onClosed: {
-            sidebar.showSettingsMenu = false
         }
     }
 }
