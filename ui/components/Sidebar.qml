@@ -105,11 +105,12 @@ Item {
             height: isCollapsed ? 40 : 44
             text: qsTr("发起新对话")
             onClicked: root.newConversationRequested()
+            flat: true
 
             background: Rectangle {
                 radius: height / 2
                 color: newChatButton.down ? theme.sidebarActive
-                                          : (newChatButton.hovered ? theme.sidebarHover : theme.pillButton)
+                                          : (newChatButton.checked ? theme.sidebarActive : (newChatButton.hovered ? theme.sidebarHover : theme.pillButton))
                 border.color: newChatButton.checked ? theme.accentSoft : "transparent"
                 border.width: newChatButton.checked ? 2 : 0
             }
@@ -142,14 +143,6 @@ Item {
             theme: root.theme
             iconText: "⌕"
             label: qsTr("搜索对话")
-            collapsed: root.isCollapsed
-        }
-
-        SidebarItem {
-            width: isCollapsed ? 40 : parent.width
-            theme: root.theme
-            iconText: "▤"
-            label: qsTr("资料库")
             collapsed: root.isCollapsed
         }
 
