@@ -12,7 +12,7 @@ ApplicationWindow {
     title: qsTr("vAssist")
     color: theme.window
 
-    property bool isDarkTheme: true
+    property bool isDarkTheme: false
 
     readonly property QtObject darkTheme: QtObject {
         readonly property color window: "#1e1e1e"
@@ -404,8 +404,15 @@ ApplicationWindow {
             anchors.fill: parent
             theme: root.theme
             isDarkTheme: root.isDarkTheme
-            onThemeToggled: {
-                root.isDarkTheme = !root.isDarkTheme
+            currentThemeIndex: root.isDarkTheme ? 2 : 1
+            onThemeSelectionChanged: {
+                if (index === 0) {
+                    // 系统主题 - 可以后续实现跟随系统
+                } else if (index === 1) {
+                    root.isDarkTheme = false
+                } else if (index === 2) {
+                    root.isDarkTheme = true
+                }
             }
         }
     }
