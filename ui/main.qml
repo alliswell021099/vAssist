@@ -362,9 +362,9 @@ ApplicationWindow {
     Popup {
         id: settingsPopup
         parent: Overlay.overlay
-        x: sidebarContainer.width + 8
-        y: parent.height - height - 80
-        width: 280
+        x: sidebarContainer.x + width - 35
+        y: parent.height - height - 56
+        width: sidebarContainer.width - 16
         height: 420
         modal: false
         focus: false

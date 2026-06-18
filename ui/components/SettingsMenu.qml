@@ -264,24 +264,10 @@ Item {
 
             Text {
                 width: parent.width
-                text: "🇺🇸 美国加利福尼亚圣克拉拉"
+                text: "这是一个测试"
                 color: "#1a73e8"
                 font.pixelSize: 13
                 font.weight: Font.Medium
-            }
-
-            Text {
-                width: parent.width
-                text: "根据 IP 地址确定"
-                color: theme.textMuted
-                font.pixelSize: 12
-            }
-
-            Text {
-                width: parent.width
-                text: "更新位置信息"
-                color: "#1a73e8"
-                font.pixelSize: 12
             }
         }
     }
