@@ -12,7 +12,9 @@ ApplicationWindow {
     title: qsTr("vAssist")
     color: theme.window
 
-    readonly property QtObject theme: QtObject {
+    property bool isDarkTheme: true
+
+    readonly property QtObject darkTheme: QtObject {
         readonly property color window: "#1e1e1e"
         readonly property color sidebar: "#171717"
         readonly property color sidebarHover: "#2a2a2a"
@@ -30,6 +32,27 @@ ApplicationWindow {
         readonly property color bubbleAssistant: "#252526"
         readonly property color pillButton: "#2d2d2d"
     }
+
+    readonly property QtObject lightTheme: QtObject {
+        readonly property color window: "#ffffff"
+        readonly property color sidebar: "#f5f5f5"
+        readonly property color sidebarHover: "#ebebeb"
+        readonly property color sidebarActive: "#e0e0e0"
+        readonly property color mainGradientTop: "#fafafa"
+        readonly property color mainGradientBottom: "#ffffff"
+        readonly property color inputSurface: "#ffffff"
+        readonly property color inputBorder: "#e0e0e0"
+        readonly property color textPrimary: "#1a1a1a"
+        readonly property color textSecondary: "#4a4a4a"
+        readonly property color textMuted: "#8a8a8a"
+        readonly property color accent: "#1a73e8"
+        readonly property color accentSoft: "#4285f4"
+        readonly property color bubbleUser: "#1a73e8"
+        readonly property color bubbleAssistant: "#f1f3f4"
+        readonly property color pillButton: "#f0f0f0"
+    }
+
+    property QtObject theme: isDarkTheme ? darkTheme : lightTheme
 
     readonly property bool hasConversation: chatModel.count > 0
 
@@ -371,15 +394,19 @@ ApplicationWindow {
         closePolicy: Popup.CloseOnEscape
 
         background: Rectangle {
-            color: "#252526"
+            color: root.isDarkTheme ? "#252526" : "#ffffff"
             radius: 16
-            border.color: "#3c3c3c"
+            border.color: root.isDarkTheme ? "#3c3c3c" : "#e0e0e0"
             border.width: 1
         }
 
         SettingsMenu {
             anchors.fill: parent
             theme: root.theme
+            isDarkTheme: root.isDarkTheme
+            onThemeToggled: {
+                root.isDarkTheme = !root.isDarkTheme
+            }
         }
     }
 }

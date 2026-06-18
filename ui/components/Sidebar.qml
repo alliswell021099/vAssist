@@ -54,7 +54,7 @@ Item {
 
         RowLayout {
             width: parent.width
-            spacing: 10
+            spacing: 5
 
             Text {
                 text: "✦"
@@ -110,6 +110,8 @@ Item {
                 radius: height / 2
                 color: newChatButton.down ? theme.sidebarActive
                                           : (newChatButton.hovered ? theme.sidebarHover : theme.pillButton)
+                border.color: newChatButton.checked ? theme.accentSoft : "transparent"
+                border.width: newChatButton.checked ? 2 : 0
             }
 
             contentItem: Row {

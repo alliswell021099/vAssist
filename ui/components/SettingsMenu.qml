@@ -4,6 +4,8 @@ import QtQuick.Layouts
 Item {
     id: root
     required property var theme
+    required property bool isDarkTheme
+    signal themeToggled()
 
     Column {
         id: menuColumn
@@ -119,9 +121,15 @@ Item {
         }
 
         RowLayout {
+            id: themeRow
             width: parent.width
             height: 40
             spacing: 10
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: root.themeToggled()
+            }
 
             Text {
                 text: "🌙"
@@ -133,7 +141,7 @@ Item {
             }
 
             Text {
-                text: "主题"
+                text: root.isDarkTheme ? "深色主题" : "浅色主题"
                 color: theme.textPrimary
                 font.pixelSize: 14
                 Layout.fillWidth: true
