@@ -52,16 +52,15 @@ Item {
         anchors.rightMargin: isCollapsed ? 0 : 16
         spacing: 8
 
-        Row {
+        RowLayout {
             width: parent.width
             spacing: 10
-            anchors.horizontalCenter: parent.horizontalCenter
 
             Text {
                 text: "✦"
                 color: theme.accentSoft
                 font.pixelSize: 22
-                anchors.verticalCenter: parent.verticalCenter
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             }
 
             Text {
@@ -70,18 +69,17 @@ Item {
                 color: theme.textPrimary
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
-                anchors.verticalCenter: parent.verticalCenter
                 visible: !isCollapsed
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             }
 
             ToolButton {
                 id: collapseButton
-                visible: true
                 width: 28
                 height: 28
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
                 onClicked: root.isCollapsed = !root.isCollapsed
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
                 background: Rectangle {
                     radius: 6

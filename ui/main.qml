@@ -252,6 +252,21 @@ ApplicationWindow {
             Layout.fillHeight: true
 
             Rectangle {
+                id: settingsMask
+                anchors.fill: parent
+                color: "transparent"
+                visible: settingsPopup.visible
+                z: 99
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        settingsPopup.visible = false
+                    }
+                }
+            }
+
+            Rectangle {
                 anchors.fill: parent
                 gradient: Gradient {
                     GradientStop { position: 0.0; color: theme.mainGradientTop }
@@ -340,21 +355,6 @@ ApplicationWindow {
                         onAttachRequested: console.log("attach requested")
                     }
                 }
-            }
-        }
-    }
-
-    Rectangle {
-        id: settingsMask
-        anchors.fill: parent
-        color: "transparent"
-        visible: settingsPopup.visible
-        z: 99
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                settingsPopup.visible = false
             }
         }
     }
