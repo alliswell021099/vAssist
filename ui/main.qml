@@ -8,11 +8,18 @@ ApplicationWindow {
     id: root
     width: 1180
     height: 760
+
+    minimumWidth: 800
+    minimumHeight: 600
+
+    x: (Screen.width - width) / 2
+    y: (Screen.height - height) / 2
+
     visible: true
     title: qsTr("vAssist")
     color: theme.window
 
-    property bool isDarkTheme: false
+    property bool isDarkTheme: true
 
     readonly property QtObject darkTheme: QtObject {
         readonly property color window: "#1e1e1e"
