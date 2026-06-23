@@ -4,6 +4,8 @@
         <file>ui/components/Sidebar.qml</file>
         <file>ui/components/SidebarItem.qml</file>
         <file>ui/components/ChatHistoryItem.qml</file>
+        <file>ui/components/ChatHistoryItemEx.qml</file>
+        <file>ui/components/ChatHistoryList.qml</file>
         <file>ui/components/InputPill.qml</file>
         <file>ui/components/ChatBubble.qml</file>
         <file>ui/components/SettingsMenu.qml</file>

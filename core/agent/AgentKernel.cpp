@@ -8,7 +8,7 @@
 AgentKernel::AgentKernel(QObject *parent)
     : QObject(parent)
 {
-    setProvider(std::make_unique<MockProvider>(this));
+    setProvider(std::make_unique<MockProvider>());
 }
 
 void AgentKernel::sendMessage(const QString &msg)

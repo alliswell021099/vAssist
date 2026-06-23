@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QtGlobal>
 
 int main(int argc, char *argv[])
 {
@@ -16,12 +17,14 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("agentKernel"), &agentKernel);
 
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+#endif
 
     engine.load(url);
 

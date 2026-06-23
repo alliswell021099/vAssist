@@ -12,20 +12,35 @@ Item {
     property int currentIndex: -1
     property bool isCollapsed: false
     property bool showSettingsMenu: false
+    property bool showBrandTitle: true
+    readonly property int railMargin: 16
+    readonly property int iconSize: 32
 
     signal conversationSelected(int index)
     signal conversationDeleted(int index)
+    signal conversationRenamed(int index, string newName)
+    signal conversationPinned(int index, bool pinned)
+    signal conversationShared(int index)
     signal newConversationRequested()
     signal settingsMenuToggled()
 
-    width: isCollapsed ? 64 : 260
+    width: parent ? parent.width : (isCollapsed ? 64 : 260)
     clip: true
 
-    Behavior on width {
-        NumberAnimation {
-            duration: 250
-            easing.type: Easing.InOutQuad
+    onIsCollapsedChanged: {
+        if (isCollapsed) {
+            titleRevealTimer.stop();
+            showBrandTitle = false;
+        } else {
+            titleRevealTimer.restart();
         }
+    }
+
+    Timer {
+        id: titleRevealTimer
+        interval: 210
+        repeat: false
+        onTriggered: root.showBrandTitle = true
     }
 
     ListModel {
@@ -48,39 +63,63 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.topMargin: 12
-        anchors.leftMargin: 16 // 保持左侧基准线绝对不动
+        anchors.leftMargin: root.railMargin
         anchors.rightMargin: isCollapsed ? 0 : 16
         spacing: 8
 
-        RowLayout {
+        Item {
+            id: titleRow
             width: parent.width
-            spacing: 5
+            height: 32
 
-            Text {
-                text: "✦"
-                color: theme.accentSoft
-                font.pixelSize: 22
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                visible: !isCollapsed
-            }
+            Item {
+                id: titleCluster
+                x: 0
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(0, collapseButton.x - 8)
+                height: parent.height
+                clip: true
+                visible: root.showBrandTitle
 
-            Text {
-                id: titleText
-                text: "vAssist"
-                color: theme.textPrimary
-                font.pixelSize: 20
-                font.weight: Font.DemiBold
-                visible: !isCollapsed
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                Text {
+                    id: brandIcon
+                    x: 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 24
+                    text: "✦"
+                    color: theme.accentSoft
+                    font.pixelSize: 22
+                    horizontalAlignment: Text.AlignLeft
+                }
+
+                Text {
+                    id: titleText
+                    anchors.left: brandIcon.right
+                    anchors.leftMargin: 6
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "vAssist"
+                    color: theme.textPrimary
+                    font.pixelSize: 20
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
             }
 
             ToolButton {
                 id: collapseButton
+                x: root.isCollapsed ? (root.iconSize - width) / 2 : Math.max(0, parent.width - width)
+                anchors.verticalCenter: parent.verticalCenter
                 width: 28
                 height: 28
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                 onClicked: root.isCollapsed = !root.isCollapsed
+
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 220
+                        easing.type: Easing.InOutCubic
+                    }
+                }
 
                 background: Rectangle {
                     radius: 6
@@ -101,7 +140,7 @@ Item {
 
         Button {
             id: newChatButton
-            width: isCollapsed ? 32 : parent.width
+            width: isCollapsed ? root.iconSize : parent.width
             height: isCollapsed ? 40 : 44
             text: qsTr("发起新对话")
             onClicked: root.newConversationRequested()
@@ -118,13 +157,15 @@ Item {
             contentItem: Row {
                 spacing: isCollapsed ? 0 : 10
                 anchors.left: parent.left
-                anchors.leftMargin: isCollapsed ? 4 : 12
+                anchors.leftMargin: isCollapsed ? 0 : 12
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
-                    text: "+"
+                    width: root.iconSize
+                    text: "＋"
                     color: theme.textSecondary
-                    font.pixelSize: isCollapsed ? 20 : 18
+                    font.pixelSize: 18
+                    horizontalAlignment: Text.AlignHCenter
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -141,11 +182,12 @@ Item {
         Item { width: 1; height: isCollapsed ? 4 : 8 }
 
         SidebarItem {
-            width: isCollapsed ? 32 : parent.width
+            width: isCollapsed ? root.iconSize : parent.width
             theme: root.theme
             iconText: "⌕"
             label: qsTr("搜索对话")
             collapsed: root.isCollapsed
+            iconSize: root.iconSize
         }
 
         Text {
@@ -160,7 +202,7 @@ Item {
         }
     }
 
-    ListView {
+    ChatHistoryList {
         id: historyList
         anchors.top: headerColumn.bottom
         anchors.topMargin: 4
@@ -170,40 +212,15 @@ Item {
         anchors.rightMargin: isCollapsed ? 0 : 16
         anchors.bottom: footerArea.top
         anchors.bottomMargin: 8
-        clip: true
-        spacing: 2
         model: root.effectiveModel
-
-        property bool isHovered: false
-
-        ScrollBar.vertical: ScrollBar {
-            id: historyScrollBar
-            policy: ScrollBar.AsNeeded
-            width: 4
-            opacity: (historyList.isHovered || historyScrollBar.pressed) ? 1.0 : 0.0
-            visible: !root.isCollapsed
-
-            background: Rectangle { color: "transparent" }
-            contentItem: Rectangle { color: "#3a3a3a"; radius: 2 }
-            Behavior on opacity { NumberAnimation { duration: 200 } }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            onEntered: historyList.isHovered = true
-            onExited: historyList.isHovered = false
-        }
-
-        delegate: ChatHistoryItem {
-            width: historyList.width
-            theme: root.theme
-            title: model.title
-            selected: index === root.currentIndex
-            collapsed: root.isCollapsed
-            onClicked: root.conversationSelected(index)
-            onDeleteRequested: root.conversationDeleted(index)
-        }
+        theme: root.theme
+        currentIndex: root.currentIndex
+        collapsed: root.isCollapsed
+        onConversationSelected: function(index) { root.conversationSelected(index) }
+        onConversationDeleted: function(index) { root.conversationDeleted(index) }
+        onConversationRenamed: function(index, newName) { root.conversationRenamed(index, newName) }
+        onConversationPinned: function(index, pinned) { root.conversationPinned(index, pinned) }
+        onConversationShared: function(index) { root.conversationShared(index) }
     }
 
     // =========================================================================
@@ -214,18 +231,23 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.leftMargin: 16 // 基准线：永恒固定靠左 16px
+        anchors.leftMargin: root.railMargin
         anchors.rightMargin: 16
         anchors.bottomMargin: 16
         height: 76 // 保持固定高度，给齿轮留足折叠时的上移空间
+
+        readonly property real settingsExpandedX: 216
+        readonly property real settingsCollapsedX: 0
+        readonly property real settingsExpandedY: 44
+        readonly property real settingsCollapsedY: 0
 
         // 1. 固定绝对坐标的用户区 —— 无论怎么折叠，物理位置百分之百完全静止不动
         MouseArea {
             id: profileMouse
             x: 0
             y: 44 // 永远呆在 footerArea 的最底部 (76 - 32)
-            width: isCollapsed ? 32 : 160
-            height: 32
+            width: isCollapsed ? root.iconSize : 160
+            height: root.iconSize
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
 
@@ -240,8 +262,8 @@ Item {
                 id: avatarCircle
                 x: 0
                 y: 0
-                width: 32
-                height: 32
+                width: root.iconSize
+                height: root.iconSize
                 radius: 16
                 color: theme.accent
 
@@ -269,19 +291,14 @@ Item {
         // 2. 设置齿轮 —— 彻底摒弃动态 anchors，直接通过数学公式算 x 和 y，跟随动画丝滑移动
         MouseArea {
             id: settingsIconMouse
-            width: 32
-            height: 32
+            width: root.iconSize
+            height: root.iconSize
 
-            // 【核心修复】：
-            // 展开时：x 移到最右侧（父级总宽减去自身宽度 32）；折叠时：x 归 0，完美与头像垂直对齐
-            x: isCollapsed ? 0 : (parent.width - width)
+            x: isCollapsed ? footerArea.settingsCollapsedX : footerArea.settingsExpandedX
+            y: isCollapsed ? footerArea.settingsCollapsedY : footerArea.settingsExpandedY
 
-            // 展开时：y 在最下面（44），与头像并列；折叠时：y 上移到顶端（0），在头像上方隔出 12px 间距
-            y: isCollapsed ? 0 : 44
-
-            // 齿轮横向和纵向移动的丝滑动画效果
-            Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.InOutQuad } }
-            Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.InOutQuad } }
+            Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.InOutCubic } }
+            Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.InOutCubic } }
 
             Rectangle {
                 anchors.fill: parent

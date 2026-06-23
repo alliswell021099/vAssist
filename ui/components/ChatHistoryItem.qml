@@ -47,7 +47,7 @@ Item {
             Text {
                 Layout.preferredWidth: 18
                 Layout.alignment: root.collapsed ? Qt.AlignHCenter : undefined
-                text: "💬"
+                text: "222"
                 font.pixelSize: 14
                 opacity: root.selected ? 1.0 : 0.75
                 horizontalAlignment: Text.AlignHCenter

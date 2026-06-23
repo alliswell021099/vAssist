@@ -12,56 +12,75 @@ ApplicationWindow {
     minimumWidth: 800
     minimumHeight: 600
 
-    x: (Screen.width - width) / 2
-    y: (Screen.height - height) / 2
-
     visible: true
     title: qsTr("vAssist")
     color: theme.window
 
-    property bool isDarkTheme: true
+    property bool isDarkTheme: false
+    property bool sidebarCollapsed: false
+    property real sidebarWidth: 280
+    property string activeModelLabel: qsTr("vAssist 1.0 Flash")
+
+    Behavior on sidebarWidth {
+        NumberAnimation {
+            duration: 220
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+    onSidebarCollapsedChanged: {
+        sidebarWidth = sidebarCollapsed ? 72 : 280;
+    }
 
     readonly property QtObject darkTheme: QtObject {
-        readonly property color window: "#1e1e1e"
-        readonly property color sidebar: "#171717"
-        readonly property color sidebarHover: "#2a2a2a"
-        readonly property color sidebarActive: "#333333"
-        readonly property color mainGradientTop: "#1a2433"
-        readonly property color mainGradientBottom: "#1e1e1e"
-        readonly property color inputSurface: "#252526"
-        readonly property color inputBorder: "#3c3c3c"
-        readonly property color textPrimary: "#d4d4d4"
-        readonly property color textSecondary: "#b0b0b0"
-        readonly property color textMuted: "#7a7a7a"
-        readonly property color accent: "#007acc"
-        readonly property color accentSoft: "#4da3e0"
-        readonly property color bubbleUser: "#2a2d2e"
-        readonly property color bubbleAssistant: "#252526"
-        readonly property color pillButton: "#2d2d2d"
+        readonly property color window: "#0f1115"
+        readonly property color sidebar: "#0c0f14"
+        readonly property color sidebarHover: "#181d25"
+        readonly property color sidebarActive: "#232a35"
+        readonly property color mainGradientTop: "#11151b"
+        readonly property color mainGradientBottom: "#0f1115"
+        readonly property color inputSurface: "#151a21"
+        readonly property color inputBorder: "#2b3240"
+        readonly property color textPrimary: "#e8eaed"
+        readonly property color textSecondary: "#c3c8d1"
+        readonly property color textMuted: "#7f8896"
+        readonly property color accent: "#8ab4f8"
+        readonly property color accentSoft: "#aecbfa"
+        readonly property color bubbleUser: "#223149"
+        readonly property color bubbleAssistant: "#151a21"
+        readonly property color pillButton: "#1a2029"
+        readonly property color surfaceRaised: "#1a2029"
+        readonly property color divider: "#232a35"
+        readonly property color chip: "#1b212b"
+        readonly property color chipHover: "#242c38"
     }
 
     readonly property QtObject lightTheme: QtObject {
-        readonly property color window: "#ffffff"
-        readonly property color sidebar: "#f5f5f5"
-        readonly property color sidebarHover: "#ebebeb"
-        readonly property color sidebarActive: "#e0e0e0"
-        readonly property color mainGradientTop: "#fafafa"
+        readonly property color window: "#f8fafc"
+        readonly property color sidebar: "#f2f4f7"
+        readonly property color sidebarHover: "#e7ebf1"
+        readonly property color sidebarActive: "#dbe2ea"
+        readonly property color mainGradientTop: "#f8fafc"
         readonly property color mainGradientBottom: "#ffffff"
         readonly property color inputSurface: "#ffffff"
-        readonly property color inputBorder: "#e0e0e0"
-        readonly property color textPrimary: "#1a1a1a"
-        readonly property color textSecondary: "#4a4a4a"
-        readonly property color textMuted: "#8a8a8a"
+        readonly property color inputBorder: "#d6dce4"
+        readonly property color textPrimary: "#111827"
+        readonly property color textSecondary: "#374151"
+        readonly property color textMuted: "#6b7280"
         readonly property color accent: "#1a73e8"
         readonly property color accentSoft: "#4285f4"
-        readonly property color bubbleUser: "#1a73e8"
-        readonly property color bubbleAssistant: "#f1f3f4"
-        readonly property color pillButton: "#f0f0f0"
+        readonly property color bubbleUser: "#dbeafe"
+        readonly property color bubbleAssistant: "#ffffff"
+        readonly property color pillButton: "#eef2f7"
+        readonly property color surfaceRaised: "#ffffff"
+        readonly property color divider: "#dbe2ea"
+        readonly property color chip: "#eef2f7"
+        readonly property color chipHover: "#e4eaf2"
     }
 
     property QtObject theme: isDarkTheme ? darkTheme : lightTheme
 
-    readonly property bool hasConversation: chatModel.count > 0
+    readonly property bool hasConversation: currentConversationIndex >= 0
 
     property int currentConversationIndex: -1
     property int conversationIdCounter: 0
@@ -134,7 +153,8 @@ ApplicationWindow {
         const conversationId = nextConversationId();
         chatHistoryModel.insert(0, {
             conversationId: conversationId,
-            title: qsTr("新对话")
+            title: qsTr("新对话"),
+            pinned: false
         });
         conversationStore[conversationId] = [];
 
@@ -158,6 +178,7 @@ ApplicationWindow {
                 chatModel.clear();
             } else {
                 const nextIndex = Math.min(index, chatHistoryModel.count - 1);
+                currentConversationIndex = -1;
                 selectConversation(nextIndex);
             }
         } else if (currentConversationIndex > index) {
@@ -165,6 +186,37 @@ ApplicationWindow {
         }
 
         clearInputs();
+    }
+
+    function renameConversation(index, newName) {
+        if (index < 0 || index >= chatHistoryModel.count) {
+            return;
+        }
+
+        const trimmed = newName.trim();
+        if (trimmed.length === 0) {
+            return;
+        }
+
+        chatHistoryModel.setProperty(index, "title", trimmed);
+    }
+
+    function setConversationPinned(index, pinned) {
+        if (index < 0 || index >= chatHistoryModel.count) {
+            return;
+        }
+
+        chatHistoryModel.setProperty(index, "pinned", pinned);
+    }
+
+    function shareConversation(index) {
+        if (index < 0 || index >= chatHistoryModel.count) {
+            return;
+        }
+
+        const title = chatHistoryModel.get(index).title;
+        console.log("share conversation:", title);
+        appendMessage("system", qsTr("已生成分享占位：") + title);
     }
 
     function ensureActiveConversation(firstMessage) {
@@ -180,7 +232,8 @@ ApplicationWindow {
 
         chatHistoryModel.insert(0, {
             conversationId: conversationId,
-            title: title
+            title: title,
+            pinned: false
         });
         conversationStore[conversationId] = [];
         currentConversationIndex = 0;
@@ -220,13 +273,20 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        x = (Screen.width - width) / 2;
+        y = (Screen.height - height) / 2;
+
         const demoSessions = [
             { conversationId: "demo-1", title: "框架通路测试" },
             { conversationId: "demo-2", title: "Qt Agent 架构" }
         ];
 
         for (let i = 0; i < demoSessions.length; ++i) {
-            chatHistoryModel.append(demoSessions[i]);
+            chatHistoryModel.append({
+                conversationId: demoSessions[i].conversationId,
+                title: demoSessions[i].title,
+                pinned: false
+            });
             conversationStore[demoSessions[i].conversationId] = [];
         }
 
@@ -243,7 +303,7 @@ ApplicationWindow {
         function onTriggerTool(action, args) {
             if (action === "download") {
                 const url = args.url !== undefined ? args.url : JSON.stringify(args);
-                const message = qsTr("【框架通路测试成功】拦截到下载请求，参数为：") + url;
+                const message = qsTr("已拦截下载请求：") + url;
                 console.log(message);
                 appendMessage("tool", message);
             } else {
@@ -258,7 +318,7 @@ ApplicationWindow {
 
         Rectangle {
             id: sidebarContainer
-            Layout.preferredWidth: 280
+            Layout.preferredWidth: root.sidebarWidth
             Layout.fillHeight: true
             color: theme.sidebar
 
@@ -268,33 +328,23 @@ ApplicationWindow {
                 theme: root.theme
                 chatHistoryModel: chatHistoryModel
                 currentIndex: root.currentConversationIndex
+                isCollapsed: root.sidebarCollapsed
                 onConversationSelected: function(index) { root.selectConversation(index) }
                 onConversationDeleted: function(index) { root.deleteConversation(index) }
+                onConversationRenamed: function(index, newName) { root.renameConversation(index, newName) }
+                onConversationPinned: function(index, pinned) { root.setConversationPinned(index, pinned) }
+                onConversationShared: function(index) { root.shareConversation(index) }
                 onNewConversationRequested: root.createNewConversation()
                 onSettingsMenuToggled: {
                     settingsPopup.visible = !settingsPopup.visible
                 }
+                onIsCollapsedChanged: root.sidebarCollapsed = isCollapsed
             }
         }
 
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            Rectangle {
-                id: settingsMask
-                anchors.fill: parent
-                color: "transparent"
-                visible: settingsPopup.visible
-                z: 99
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        settingsPopup.visible = false
-                    }
-                }
-            }
 
             Rectangle {
                 anchors.fill: parent
@@ -313,41 +363,28 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    Column {
+                    InputPill {
+                        id: welcomeInput
                         anchors.centerIn: parent
-                        width: Math.min(parent.width - 80, 760)
-                        spacing: 36
+                        width: Math.min(parent.width - 112, 820)
                         visible: !root.hasConversation
-
-                        Text {
-                            width: parent.width
-                            text: qsTr("需要我为你做些什么？")
-                            color: theme.textPrimary
-                            font.pixelSize: 32
-                            font.weight: Font.Normal
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        InputPill {
-                            id: welcomeInput
-                            width: parent.width
-                            theme: root.theme
-                            modelLabel: "Mock"
-                            onSendRequested: root.sendCurrentMessage()
-                            onAttachRequested: console.log("attach requested")
-                        }
+                        theme: root.theme
+                        modelLabel: root.activeModelLabel
+                        onSendRequested: root.sendCurrentMessage()
+                        onAttachRequested: console.log("attach requested")
+                        onVoiceRequested: console.log("voice requested")
                     }
 
                     ListView {
                         id: chatList
                         anchors.fill: parent
-                        anchors.topMargin: 24
-                        anchors.bottomMargin: 16
-                        anchors.leftMargin: 48
-                        anchors.rightMargin: 48
+                        anchors.topMargin: 28
+                        anchors.bottomMargin: 20
+                        anchors.leftMargin: 56
+                        anchors.rightMargin: 56
                         visible: root.hasConversation
                         clip: true
-                        spacing: 20
+                        spacing: 18
                         model: chatModel
 
                         ScrollBar.vertical: ScrollBar {
@@ -378,11 +415,27 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 24
-                        width: Math.min(parent.width - 96, 760)
+                        width: Math.min(parent.width - 112, 820)
                         theme: root.theme
-                        modelLabel: "Mock"
+                        modelLabel: root.activeModelLabel
                         onSendRequested: root.sendCurrentMessage()
                         onAttachRequested: console.log("attach requested")
+                        onVoiceRequested: console.log("voice requested")
+                    }
+                }
+            }
+
+            Rectangle {
+                id: settingsMask
+                anchors.fill: parent
+                color: "transparent"
+                visible: settingsPopup.visible
+                z: 99
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        settingsPopup.visible = false
                     }
                 }
             }

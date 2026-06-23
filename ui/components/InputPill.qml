@@ -12,6 +12,7 @@ Item {
 
     signal sendRequested()
     signal attachRequested()
+    signal voiceRequested()
 
     function forceInputFocus() {
         messageInput.forceActiveFocus();
@@ -46,6 +47,7 @@ Item {
             spacing: 4
 
             ToolButton {
+                id: attachButton
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
                 text: "+"
@@ -54,8 +56,8 @@ Item {
 
                 background: Rectangle {
                     radius: width / 2
-                    color: parent.down ? theme.sidebarHover
-                                       : (parent.hovered ? theme.sidebarActive : "transparent")
+                    color: attachButton.down ? theme.sidebarHover
+                                             : (attachButton.hovered ? theme.sidebarActive : "transparent")
                 }
 
                 contentItem: Text {
@@ -93,7 +95,7 @@ Item {
                 Layout.preferredHeight: 32
                 Layout.preferredWidth: modelRow.implicitWidth + 20
                 radius: 16
-                color: theme.sidebarHover
+                color: theme.chip
 
                 Row {
                     id: modelRow
@@ -117,6 +119,29 @@ Item {
             }
 
             ToolButton {
+                id: voiceButton
+                Layout.preferredWidth: 40
+                Layout.preferredHeight: 40
+                text: "🎙"
+                onClicked: root.voiceRequested()
+
+                background: Rectangle {
+                    radius: width / 2
+                    color: voiceButton.down ? theme.sidebarHover
+                                            : (voiceButton.hovered ? theme.sidebarActive : "transparent")
+                }
+
+                contentItem: Text {
+                    text: voiceButton.text
+                    color: theme.textSecondary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.pixelSize: 15
+                }
+            }
+
+            ToolButton {
+                id: sendButton
                 Layout.preferredWidth: 40
                 Layout.preferredHeight: 40
                 text: "➤"
@@ -126,13 +151,13 @@ Item {
 
                 background: Rectangle {
                     radius: width / 2
-                    color: parent.enabled && (parent.down || parent.hovered)
-                          ? Qt.rgba(0 / 255, 122 / 255, 204 / 255, 0.25)
+                    color: sendButton.enabled && (sendButton.down || sendButton.hovered)
+                          ? Qt.rgba(66 / 255, 133 / 255, 244 / 255, 0.18)
                           : "transparent"
                 }
 
                 contentItem: Text {
-                    text: parent.text
+                    text: sendButton.text
                     color: theme.accent
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter

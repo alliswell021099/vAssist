@@ -9,6 +9,7 @@ Item {
     property string iconText: ""
     property bool active: false
     property bool collapsed: false
+    property int iconSize: 32
 
     signal clicked()
 
@@ -29,9 +30,11 @@ Item {
             spacing: collapsed ? 0 : 12
 
             Text {
+                width: root.iconSize
                 text: root.iconText
                 color: root.theme.textSecondary
                 font.pixelSize: 15
+                horizontalAlignment: Text.AlignHCenter
                 anchors.verticalCenter: parent.verticalCenter
             }
 
