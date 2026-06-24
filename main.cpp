@@ -1,4 +1,7 @@
 #include "core/agent/AgentKernel.h"
+#include "core/providers/ProviderManager.h"
+#include "core/providers/MockProvider.h"
+#include "core/providers/LocalModelProvider.h"
 
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -9,6 +12,9 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    ProviderManager::instance().registerProvider<MockProvider>();
+    ProviderManager::instance().registerProvider<LocalModelProvider>();
 
     QQmlApplicationEngine engine;
     engine.addImportPath(QStringLiteral("qrc:/ui"));

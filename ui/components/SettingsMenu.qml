@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -8,9 +9,18 @@ Item {
     required property bool isDarkTheme
     property int currentThemeIndex: 1
     property bool themeSubMenuOpen: false
+    property bool localModelSubMenuOpen: false
+    property string localApiBase: "http://localhost:11434/v1"
+    property string localModelName: "qwen2.5:7b"
+    property string localApiKey: ""
+    property string connectionStatus: ""
+    property bool connectionOk: false
     implicitHeight: contentColumn.implicitHeight + 16
 
     signal themeSelectionChanged(int index)
+    signal testConnectionRequested()
+    signal applyAndSwitchLocalRequested(string apiBase, string modelName, string apiKey)
+    signal switchToMockRequested()
 
     component SettingsRow: Item {
         id: rowRoot
@@ -88,7 +98,255 @@ Item {
         SettingsRow {
             theme: root.theme
             iconText: "⚡"
-            label: qsTr("个性化智能服务")
+            label: qsTr("本地模型 (Ollama)")
+            trailingText: root.localModelSubMenuOpen ? "∧" : "›"
+            trailingColor: root.connectionOk ? "#34a853" : root.theme.textMuted
+            onClicked: root.localModelSubMenuOpen = !root.localModelSubMenuOpen
+        }
+
+        Column {
+            width: parent.width
+            visible: root.localModelSubMenuOpen
+            spacing: 4
+
+            Item {
+                width: parent.width
+                height: 48
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 36
+                    anchors.rightMargin: 12
+                    anchors.top: parent.top
+                    spacing: 4
+
+                    Text {
+                        text: qsTr("API 地址")
+                        color: root.theme.textSecondary
+                        font.pixelSize: 11
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 28
+                        radius: 6
+                        color: root.theme.inputSurface
+                        border.color: root.theme.inputBorder
+                        border.width: 1
+
+                        TextInput {
+                            id: apiBaseInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.localApiBase
+                            // placeholderText: "http://localhost:11434/v1"
+                            color: root.theme.textPrimary
+                            // placeholderTextColor: root.theme.textMuted
+                            font.pixelSize: 12
+                            verticalAlignment: TextInput.AlignVCenter
+                            selectionColor: root.theme.accent
+                            selectedTextColor: "#ffffff"
+                            onTextChanged: root.localApiBase = text
+                        }
+                    }
+                }
+            }
+
+            Item {
+                width: parent.width
+                height: 48
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 36
+                    anchors.rightMargin: 12
+                    spacing: 4
+
+                    Text {
+                        text: qsTr("模型名称")
+                        color: root.theme.textSecondary
+                        font.pixelSize: 11
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 28
+                        radius: 6
+                        color: root.theme.inputSurface
+                        border.color: root.theme.inputBorder
+                        border.width: 1
+
+                        TextInput {
+                            id: modelNameInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.localModelName
+                            color: root.theme.textPrimary
+                            font.pixelSize: 12
+                            verticalAlignment: TextInput.AlignVCenter
+                            selectionColor: root.theme.accent
+                            selectedTextColor: "#ffffff"
+                            onTextChanged: root.localModelName = text
+                        }
+                    }
+                }
+            }
+
+            Item {
+                width: parent.width
+                height: 48
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 36
+                    anchors.rightMargin: 12
+                    spacing: 4
+
+                    Text {
+                        text: qsTr("API Key (可选)")
+                        color: root.theme.textSecondary
+                        font.pixelSize: 11
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 28
+                        radius: 6
+                        color: root.theme.inputSurface
+                        border.color: root.theme.inputBorder
+                        border.width: 1
+
+                        TextInput {
+                            id: apiKeyInput
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.localApiKey
+                            color: root.theme.textPrimary
+                            font.pixelSize: 12
+                            echoMode: TextInput.Password
+                            verticalAlignment: TextInput.AlignVCenter
+                            selectionColor: root.theme.accent
+                            selectedTextColor: "#ffffff"
+                            onTextChanged: root.localApiKey = text
+                        }
+                    }
+                }
+            }
+
+            Item {
+                width: parent.width
+                height: 32
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 36
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Rectangle {
+                        id: testBtn
+                        width: (parent.width - 8) / 2
+                        height: 28
+                        radius: 6
+                        color: testBtnMouse.pressed ? root.theme.sidebarActive : root.theme.sidebarHover
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("测试连接")
+                            color: root.theme.textPrimary
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            id: testBtnMouse
+                            anchors.fill: parent
+                            onClicked: root.testConnectionRequested()
+                        }
+                    }
+
+                    Rectangle {
+                        id: useBtn
+                        width: (parent.width - 8) / 2
+                        height: 28
+                        radius: 6
+                        color: useBtnMouse.pressed ? root.theme.accent : root.theme.sidebarActive
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("应用并使用")
+                            color: root.theme.textPrimary
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            id: useBtnMouse
+                            anchors.fill: parent
+                            onClicked: {
+                                root.applyAndSwitchLocalRequested(
+                                    root.localApiBase,
+                                    root.localModelName,
+                                    root.localApiKey
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Item {
+                width: parent.width
+                height: 24
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: 36
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    Text {
+                        text: root.connectionOk ? "●" : "○"
+                        color: root.connectionOk ? "#34a853" : root.theme.textMuted
+                        font.pixelSize: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: root.connectionStatus.length > 0
+                               ? root.connectionStatus
+                               : qsTr("未测试连接")
+                        color: root.connectionOk ? "#34a853" : root.theme.textMuted
+                        font.pixelSize: 11
+                        anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+
+            Item { width: 1; height: 4 }
+        }
+
+        SettingsRow {
+            theme: root.theme
+            iconText: "🧪"
+            label: qsTr("Mock 测试模式")
+            trailingText: "›"
+            onClicked: root.switchToMockRequested()
         }
 
         SettingsRow {

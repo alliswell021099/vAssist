@@ -582,14 +582,48 @@ ApplicationWindow {
             theme: root.theme
             isDarkTheme: root.isDarkTheme
             currentThemeIndex: root.isDarkTheme ? 2 : 1
+            localApiBase: agentKernel.localApiBase
+            localModelName: agentKernel.localModelName
+            localApiKey: agentKernel.localApiKey
+
             onThemeSelectionChanged: {
                 if (index === 0) {
-                    // 系统主题 - 可以后续实现跟随系统
                 } else if (index === 1) {
                     root.isDarkTheme = false
                 } else if (index === 2) {
                     root.isDarkTheme = true
                 }
+            }
+
+            onTestConnectionRequested: {
+                agentKernel.localApiBase = settingsMenuContent.localApiBase
+                agentKernel.localModelName = settingsMenuContent.localModelName
+                agentKernel.localApiKey = settingsMenuContent.localApiKey
+                agentKernel.testLocalConnection()
+            }
+
+            onApplyAndSwitchLocalRequested: function(apiBase, modelName, apiKey) {
+                agentKernel.localApiBase = apiBase
+                agentKernel.localModelName = modelName
+                agentKernel.localApiKey = apiKey
+                agentKernel.switchProvider("Local")
+                root.activeModelLabel = modelName
+                settingsPopup.visible = false
+            }
+
+            onSwitchToMockRequested: {
+                agentKernel.switchProvider("Mock")
+                root.activeModelLabel = "Mock"
+                settingsPopup.visible = false
+            }
+        }
+
+        Connections {
+            target: agentKernel
+
+            function onConnectionTestResult(success, message) {
+                settingsMenuContent.connectionOk = success
+                settingsMenuContent.connectionStatus = message
             }
         }
     }

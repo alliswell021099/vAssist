@@ -15,6 +15,7 @@ public:
 
     ~LLMProvider() override = default;
 
+    virtual QString name() const = 0;
     virtual void sendPrompt(const QString &prompt) = 0;
 
 signals:

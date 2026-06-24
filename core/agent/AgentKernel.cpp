@@ -1,6 +1,7 @@
 #include "AgentKernel.h"
 
-#include "core/providers/MockProvider.h"
+#include "core/providers/ProviderManager.h"
+#include "core/providers/LocalModelProvider.h"
 
 #include <QJsonDocument>
 #include <QJsonParseError>
@@ -8,12 +9,12 @@
 AgentKernel::AgentKernel(QObject *parent)
     : QObject(parent)
 {
-    setProvider(std::make_unique<MockProvider>());
+    switchProvider(QStringLiteral("Mock"));
 }
 
 void AgentKernel::sendMessage(const QString &msg)
 {
-    if (!m_provider) {
+    if (!m_activeProvider) {
         emit chatMessageReady(QStringLiteral("system"),
                               QStringLiteral("No LLM provider configured."));
         return;
@@ -21,26 +22,133 @@ void AgentKernel::sendMessage(const QString &msg)
 
     m_streamingResponse.clear();
     m_hasStreamingResponse = false;
-    m_provider->sendPrompt(msg);
+    m_activeProvider->sendPrompt(msg);
 }
 
-void AgentKernel::setProvider(std::unique_ptr<LLMProvider> provider)
+QString AgentKernel::currentProviderName() const
 {
-    if (m_provider) {
-        disconnect(m_provider.get(), nullptr, this, nullptr);
+    return m_currentProviderName;
+}
+
+QStringList AgentKernel::providerNames() const
+{
+    return ProviderManager::instance().providerNames();
+}
+
+bool AgentKernel::switchProvider(const QString &name)
+{
+    LLMProvider *provider = ProviderManager::instance().provider(name);
+    if (!provider) {
+        return false;
     }
 
-    m_provider = std::move(provider);
+    setActiveProvider(provider);
+    m_currentProviderName = name;
+    emit currentProviderNameChanged(name);
+    return true;
+}
 
-    if (!m_provider) {
+QString AgentKernel::localApiBase() const
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (!local) {
+        return QStringLiteral("http://localhost:11434/v1");
+    }
+    return local->apiBase();
+}
+
+void AgentKernel::setLocalApiBase(const QString &url)
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (local && local->apiBase() != url) {
+        local->setApiBase(url);
+        emit localApiBaseChanged(url);
+    }
+}
+
+QString AgentKernel::localModelName() const
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (!local) {
+        return QStringLiteral("qwen2.5:7b");
+    }
+    return local->modelName();
+}
+
+void AgentKernel::setLocalModelName(const QString &name)
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (local && local->modelName() != name) {
+        local->setModelName(name);
+        emit localModelNameChanged(name);
+    }
+}
+
+QString AgentKernel::localApiKey() const
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (!local) {
+        return QString();
+    }
+    return local->apiKey();
+}
+
+void AgentKernel::setLocalApiKey(const QString &key)
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (local && local->apiKey() != key) {
+        local->setApiKey(key);
+        emit localApiKeyChanged(key);
+    }
+}
+
+void AgentKernel::testLocalConnection()
+{
+    auto *local = qobject_cast<LocalModelProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("Local")));
+    if (!local) {
+        emit connectionTestResult(false, QStringLiteral("Local provider not found"));
         return;
     }
 
-    connect(m_provider.get(), &LLMProvider::finished,
+    static bool connected = false;
+    if (!connected) {
+        connect(local, &LocalModelProvider::connectionTestFinished,
+                this, &AgentKernel::onConnectionTestFinished);
+        connected = true;
+    }
+
+    local->testConnection();
+}
+
+void AgentKernel::onConnectionTestFinished(bool success, const QString &message)
+{
+    emit connectionTestResult(success, message);
+}
+
+void AgentKernel::setActiveProvider(LLMProvider *provider)
+{
+    if (m_activeProvider) {
+        disconnect(m_activeProvider, nullptr, this, nullptr);
+    }
+
+    m_activeProvider = provider;
+
+    if (!m_activeProvider) {
+        return;
+    }
+
+    connect(m_activeProvider, &LLMProvider::finished,
             this, &AgentKernel::onProviderFinished);
-    connect(m_provider.get(), &LLMProvider::errorOccurred,
+    connect(m_activeProvider, &LLMProvider::errorOccurred,
             this, &AgentKernel::onProviderError);
-    connect(m_provider.get(), &LLMProvider::tokenReady,
+    connect(m_activeProvider, &LLMProvider::tokenReady,
             this, &AgentKernel::onProviderToken);
 }
 
