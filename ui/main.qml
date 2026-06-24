@@ -81,9 +81,13 @@ ApplicationWindow {
     property QtObject theme: isDarkTheme ? darkTheme : lightTheme
 
     readonly property bool hasConversation: currentConversationIndex >= 0
+    readonly property bool hasConversationMessages: chatModel.count > 0
+    readonly property bool showCenteredInput: !hasConversation || !hasConversationMessages
+    readonly property bool showConversationArea: hasConversation && hasConversationMessages
 
     property int currentConversationIndex: -1
     property int conversationIdCounter: 0
+    property int streamingMessageIndex: -1
     property var conversationStore: ({})
 
     ListModel {
@@ -116,6 +120,7 @@ ApplicationWindow {
     }
 
     function loadConversation(conversationId) {
+        resetStreamingMessage();
         chatModel.clear();
 
         const messages = conversationStore[conversationId] || [];
@@ -128,7 +133,7 @@ ApplicationWindow {
         inputBar.text = "";
         welcomeInput.text = "";
         Qt.callLater(function() {
-            if (root.hasConversation) {
+            if (root.showConversationArea) {
                 inputBar.forceInputFocus();
             } else {
                 welcomeInput.forceInputFocus();
@@ -149,6 +154,7 @@ ApplicationWindow {
 
     function createNewConversation() {
         saveCurrentConversation();
+        resetStreamingMessage();
 
         const conversationId = nextConversationId();
         chatHistoryModel.insert(0, {
@@ -175,6 +181,7 @@ ApplicationWindow {
         if (currentConversationIndex === index) {
             if (chatHistoryModel.count === 0) {
                 currentConversationIndex = -1;
+                resetStreamingMessage();
                 chatModel.clear();
             } else {
                 const nextIndex = Math.min(index, chatHistoryModel.count - 1);
@@ -254,7 +261,41 @@ ApplicationWindow {
     }
 
     function appendMessage(sender, text) {
+        resetStreamingMessage();
         chatModel.append({ sender: sender, text: text });
+    }
+
+    function resetStreamingMessage() {
+        streamingMessageIndex = -1;
+    }
+
+    function appendAssistantToken(token) {
+        if (streamingMessageIndex < 0 || streamingMessageIndex >= chatModel.count) {
+            chatModel.append({ sender: "assistant", text: token });
+            streamingMessageIndex = chatModel.count - 1;
+            return;
+        }
+
+        const currentText = chatModel.get(streamingMessageIndex).text;
+        chatModel.setProperty(streamingMessageIndex, "text", currentText + token);
+    }
+
+    function finishAssistantStream(fullResponse) {
+        if (streamingMessageIndex < 0 || streamingMessageIndex >= chatModel.count) {
+            appendMessage("assistant", fullResponse);
+            return;
+        }
+
+        chatModel.setProperty(streamingMessageIndex, "text", fullResponse);
+        resetStreamingMessage();
+    }
+
+    function cancelAssistantStream() {
+        if (streamingMessageIndex >= 0 && streamingMessageIndex < chatModel.count) {
+            chatModel.remove(streamingMessageIndex);
+        }
+
+        resetStreamingMessage();
     }
 
     function sendCurrentMessage() {
@@ -300,6 +341,18 @@ ApplicationWindow {
             appendMessage(sender, text);
         }
 
+        function onChatTokenReady(token) {
+            appendAssistantToken(token);
+        }
+
+        function onChatStreamFinished(fullResponse) {
+            finishAssistantStream(fullResponse);
+        }
+
+        function onChatStreamCancelled() {
+            cancelAssistantStream();
+        }
+
         function onTriggerTool(action, args) {
             if (action === "download") {
                 const url = args.url !== undefined ? args.url : JSON.stringify(args);
@@ -338,7 +391,7 @@ ApplicationWindow {
                 onSettingsMenuToggled: {
                     settingsPopup.visible = !settingsPopup.visible
                 }
-                onIsCollapsedChanged: root.sidebarCollapsed = isCollapsed
+                onCollapseToggled: root.sidebarCollapsed = !root.sidebarCollapsed
             }
         }
 
@@ -363,16 +416,32 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    InputPill {
-                        id: welcomeInput
+                    Column {
+                        id: welcomePane
                         anchors.centerIn: parent
                         width: Math.min(parent.width - 112, 820)
-                        visible: !root.hasConversation
-                        theme: root.theme
-                        modelLabel: root.activeModelLabel
-                        onSendRequested: root.sendCurrentMessage()
-                        onAttachRequested: console.log("attach requested")
-                        onVoiceRequested: console.log("voice requested")
+                        visible: root.showCenteredInput
+                        spacing: 24
+
+                        Text {
+                            width: parent.width
+                            text: qsTr("需要我为你做些什么？")
+                            color: theme.textPrimary
+                            font.pixelSize: 28
+                            font.weight: Font.Normal
+                            horizontalAlignment: Text.AlignHCenter
+                            wrapMode: Text.Wrap
+                        }
+
+                        InputPill {
+                            id: welcomeInput
+                            width: parent.width
+                            theme: root.theme
+                            modelLabel: root.activeModelLabel
+                            onSendRequested: root.sendCurrentMessage()
+                            onAttachRequested: console.log("attach requested")
+                            onVoiceRequested: console.log("voice requested")
+                        }
                     }
 
                     ListView {
@@ -382,13 +451,13 @@ ApplicationWindow {
                         anchors.bottomMargin: 20
                         anchors.leftMargin: 56
                         anchors.rightMargin: 56
-                        visible: root.hasConversation
+                        visible: root.showConversationArea
                         clip: true
                         spacing: 18
                         model: chatModel
 
                         ScrollBar.vertical: ScrollBar {
-                            policy: ScrollBar.AsNeeded
+                            policy: ScrollBar.AlwaysOff
                         }
 
                         onCountChanged: Qt.callLater(function() {
@@ -398,8 +467,6 @@ ApplicationWindow {
                         delegate: ChatBubble {
                             width: chatList.width
                             bubbleWidth: chatList.width
-                            sender: model.sender
-                            text: model.text
                             theme: root.theme
                         }
                     }
@@ -407,8 +474,8 @@ ApplicationWindow {
 
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: root.hasConversation ? 96 : 0
-                    visible: root.hasConversation
+                    Layout.preferredHeight: root.showConversationArea ? 96 : 0
+                    visible: root.showConversationArea
 
                     InputPill {
                         id: inputBar

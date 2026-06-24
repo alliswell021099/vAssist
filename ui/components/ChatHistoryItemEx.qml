@@ -6,10 +6,11 @@ Item {
     id: root
 
     required property var theme
-    property string title: ""
+    required property int index
+    required property string title
+    required property bool pinned
     property bool selected: false
     property bool collapsed: false
-    property bool pinned: false
 
     signal clicked()
     signal deleteRequested()
@@ -50,7 +51,7 @@ Item {
 
             Text {
                 Layout.preferredWidth: 18
-                Layout.alignment: root.collapsed ? Qt.AlignHCenter : undefined
+                Layout.alignment: root.collapsed ? Qt.AlignHCenter : Qt.AlignLeft
                 text: root.pinned ? "📌" : "💬"
                 font.pixelSize: 14
                 opacity: root.selected ? 1.0 : 0.75

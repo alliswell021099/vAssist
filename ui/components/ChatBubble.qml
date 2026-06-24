@@ -16,6 +16,20 @@ Column {
     readonly property bool isTool: sender === "tool"
     readonly property int maxBubbleWidth: isUser ? Math.min(root.width * 0.72, 680)
                                                  : Math.min(root.width * 0.92, 780)
+    readonly property int bubbleHorizontalPadding: 32
+    readonly property int minBubbleWidth: isUser ? 44 : 64
+    readonly property int naturalBubbleWidth: Math.ceil(measureText.implicitWidth) + bubbleHorizontalPadding
+    readonly property int actualBubbleWidth: Math.min(maxBubbleWidth,
+                                                       Math.max(minBubbleWidth, naturalBubbleWidth))
+
+    Text {
+        id: measureText
+        visible: false
+        text: root.text
+        font.pixelSize: 15
+        textFormat: Text.PlainText
+        wrapMode: Text.NoWrap
+    }
 
     Text {
         visible: !root.isUser
@@ -34,7 +48,7 @@ Column {
 
         Rectangle {
             id: bubbleContent
-            width: root.maxBubbleWidth
+            width: root.actualBubbleWidth
             anchors.right: root.isUser ? parent.right : undefined
             anchors.left: root.isUser ? undefined : parent.left
             height: messageText.implicitHeight + 28
@@ -56,7 +70,7 @@ Column {
                 color: theme.textPrimary
                 font.pixelSize: 15
                 lineHeight: 1.45
-                wrapMode: Text.Wrap
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                 horizontalAlignment: Text.AlignLeft
             }
         }

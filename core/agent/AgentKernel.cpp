@@ -19,6 +19,8 @@ void AgentKernel::sendMessage(const QString &msg)
         return;
     }
 
+    m_streamingResponse.clear();
+    m_hasStreamingResponse = false;
     m_provider->sendPrompt(msg);
 }
 
@@ -39,13 +41,23 @@ void AgentKernel::setProvider(std::unique_ptr<LLMProvider> provider)
     connect(m_provider.get(), &LLMProvider::errorOccurred,
             this, &AgentKernel::onProviderError);
     connect(m_provider.get(), &LLMProvider::tokenReady,
-            this, [this](const QString &token) {
-                emit chatMessageReady(QStringLiteral("assistant"), token);
-            });
+            this, &AgentKernel::onProviderToken);
+}
+
+void AgentKernel::onProviderToken(const QString &token)
+{
+    m_hasStreamingResponse = true;
+    m_streamingResponse += token;
+    emit chatTokenReady(token);
 }
 
 void AgentKernel::onProviderFinished(const QString &fullResponse)
 {
+    const bool hadStreamingResponse = m_hasStreamingResponse;
+    const QString streamedResponse = m_streamingResponse;
+    m_streamingResponse.clear();
+    m_hasStreamingResponse = false;
+
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(fullResponse.toUtf8(), &parseError);
 
@@ -55,9 +67,17 @@ void AgentKernel::onProviderFinished(const QString &fullResponse)
 
         if (!action.isEmpty()) {
             const QJsonObject args = object.value(QStringLiteral("arguments")).toObject();
+            if (hadStreamingResponse) {
+                emit chatStreamCancelled();
+            }
             emit triggerTool(action, args);
             return;
         }
+    }
+
+    if (hadStreamingResponse) {
+        emit chatStreamFinished(fullResponse.isEmpty() ? streamedResponse : fullResponse);
+        return;
     }
 
     emit chatMessageReady(QStringLiteral("assistant"), fullResponse);
@@ -65,5 +85,11 @@ void AgentKernel::onProviderFinished(const QString &fullResponse)
 
 void AgentKernel::onProviderError(const QString &error)
 {
+    if (m_hasStreamingResponse) {
+        m_streamingResponse.clear();
+        m_hasStreamingResponse = false;
+        emit chatStreamCancelled();
+    }
+
     emit chatMessageReady(QStringLiteral("system"), error);
 }

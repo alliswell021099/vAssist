@@ -42,6 +42,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
+            acceptedButtons: Qt.NoButton
             onEntered: historyList.isHovered = true
             onExited: historyList.isHovered = false
         }
@@ -49,10 +50,8 @@ Item {
         delegate: ChatHistoryItemEx {
             width: historyList.width
             theme: root.theme
-            title: model.title
             selected: index === root.currentIndex
             collapsed: root.collapsed
-            pinned: model.pinned || false
             onClicked: root.conversationSelected(index)
             onDeleteRequested: root.conversationDeleted(index)
             onRenamed: function(newName) { root.conversationRenamed(index, newName) }

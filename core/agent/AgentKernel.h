@@ -19,9 +19,13 @@ public:
 
 signals:
     void chatMessageReady(const QString &sender, const QString &text);
+    void chatTokenReady(const QString &token);
+    void chatStreamFinished(const QString &fullResponse);
+    void chatStreamCancelled();
     void triggerTool(const QString &action, const QJsonObject &args);
 
 private slots:
+    void onProviderToken(const QString &token);
     void onProviderFinished(const QString &fullResponse);
     void onProviderError(const QString &error);
 
@@ -29,4 +33,6 @@ private:
     void setProvider(std::unique_ptr<LLMProvider> provider);
 
     std::unique_ptr<LLMProvider> m_provider;
+    QString m_streamingResponse;
+    bool m_hasStreamingResponse = false;
 };

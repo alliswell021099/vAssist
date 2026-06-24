@@ -23,6 +23,7 @@ Item {
     signal conversationShared(int index)
     signal newConversationRequested()
     signal settingsMenuToggled()
+    signal collapseToggled()
 
     width: parent ? parent.width : (isCollapsed ? 64 : 260)
     clip: true
@@ -45,14 +46,14 @@ Item {
 
     ListModel {
         id: mockHistoryModel
-        ListElement { title: "框架通路测试" }
-        ListElement { title: "Qt Agent 架构研究" }
-        ListElement { title: "MockProvider 下载指令" }
-        ListElement { title: "QML 组件设计模式" }
-        ListElement { title: "LLMProvider 接口抽象" }
-        ListElement { title: "C++ 与 QML 通信机制" }
-        ListElement { title: "异步数据流处理" }
-        ListElement { title: "智能代理工具调用链" }
+        ListElement { title: "框架通路测试"; pinned: false }
+        ListElement { title: "Qt Agent 架构研究"; pinned: false }
+        ListElement { title: "MockProvider 下载指令"; pinned: false }
+        ListElement { title: "QML 组件设计模式"; pinned: false }
+        ListElement { title: "LLMProvider 接口抽象"; pinned: false }
+        ListElement { title: "C++ 与 QML 通信机制"; pinned: false }
+        ListElement { title: "异步数据流处理"; pinned: false }
+        ListElement { title: "智能代理工具调用链"; pinned: false }
     }
 
     property var effectiveModel: chatHistoryModel !== undefined ? chatHistoryModel : mockHistoryModel
@@ -112,7 +113,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 28
                 height: 28
-                onClicked: root.isCollapsed = !root.isCollapsed
+                onClicked: root.collapseToggled()
 
                 Behavior on x {
                     NumberAnimation {
@@ -212,6 +213,7 @@ Item {
         anchors.rightMargin: isCollapsed ? 0 : 16
         anchors.bottom: footerArea.top
         anchors.bottomMargin: 8
+        visible: !root.isCollapsed
         model: root.effectiveModel
         theme: root.theme
         currentIndex: root.currentIndex

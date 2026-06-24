@@ -20,6 +20,7 @@ Item {
 
     implicitWidth: 720
     implicitHeight: inputShell.height + 8
+    height: implicitHeight
 
     Rectangle {
         id: shadow
@@ -34,7 +35,7 @@ Item {
     Rectangle {
         id: inputShell
         width: parent.width
-        height: Math.max(56, messageInput.contentHeight + 28)
+        height: Math.min(168, Math.max(56, messageInput.contentHeight + 28))
         radius: height / 2
         color: theme.inputSurface
         border.color: messageInput.activeFocus ? theme.accent : theme.inputBorder
