@@ -605,22 +605,22 @@ ApplicationWindow {
         ModelSettingsDialog {
             theme: root.theme
             isDarkTheme: root.isDarkTheme
-            apiBase: agentKernel.localApiBase
-            modelName: agentKernel.localModelName
-            apiKey: agentKernel.localApiKey
+            apiBase: agentKernel.apiBase
+            modelName: agentKernel.modelName
+            apiKey: agentKernel.apiKey
 
             onTestConnectionRequested: {
-                agentKernel.localApiBase = apiBase
-                agentKernel.localModelName = modelName
-                agentKernel.localApiKey = apiKey
-                agentKernel.testLocalConnection()
+                agentKernel.apiBase = apiBase
+                agentKernel.modelName = modelName
+                agentKernel.apiKey = apiKey
+                agentKernel.testConnection()
             }
 
             onApplyAndSwitchRequested: function(apiBase, modelName, apiKey) {
-                agentKernel.localApiBase = apiBase
-                agentKernel.localModelName = modelName
-                agentKernel.localApiKey = apiKey
-                agentKernel.switchProvider("Local")
+                agentKernel.apiBase = apiBase
+                agentKernel.modelName = modelName
+                agentKernel.apiKey = apiKey
+                agentKernel.switchProvider("OpenAI")
                 root.activeModelLabel = modelName
             }
 

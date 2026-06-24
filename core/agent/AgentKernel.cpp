@@ -1,7 +1,7 @@
 #include "AgentKernel.h"
 
 #include "core/providers/ProviderManager.h"
-#include "core/providers/LocalModelProvider.h"
+#include "core/providers/OpenAICompatProvider.h"
 
 #include <QJsonDocument>
 #include <QJsonParseError>
@@ -48,88 +48,88 @@ bool AgentKernel::switchProvider(const QString &name)
     return true;
 }
 
-QString AgentKernel::localApiBase() const
+QString AgentKernel::apiBase() const
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (!local) {
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (!provider) {
         return QStringLiteral("http://localhost:11434/v1");
     }
-    return local->apiBase();
+    return provider->apiBase();
 }
 
-void AgentKernel::setLocalApiBase(const QString &url)
+void AgentKernel::setApiBase(const QString &url)
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (local && local->apiBase() != url) {
-        local->setApiBase(url);
-        emit localApiBaseChanged(url);
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (provider && provider->apiBase() != url) {
+        provider->setApiBase(url);
+        emit apiBaseChanged(url);
     }
 }
 
-QString AgentKernel::localModelName() const
+QString AgentKernel::modelName() const
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (!local) {
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (!provider) {
         return QStringLiteral("qwen2.5:7b");
     }
-    return local->modelName();
+    return provider->modelName();
 }
 
-void AgentKernel::setLocalModelName(const QString &name)
+void AgentKernel::setModelName(const QString &name)
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (local && local->modelName() != name) {
-        local->setModelName(name);
-        emit localModelNameChanged(name);
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (provider && provider->modelName() != name) {
+        provider->setModelName(name);
+        emit modelNameChanged(name);
     }
 }
 
-QString AgentKernel::localApiKey() const
+QString AgentKernel::apiKey() const
 {
-    LLMProvider *provider = ProviderManager::instance().provider(QStringLiteral("Local"));
+    LLMProvider *p = ProviderManager::instance().provider(QStringLiteral("OpenAI"));
+    if (!p) {
+        return QString();
+    }
+
+    auto *provider = qobject_cast<OpenAICompatProvider *>(p);
     if (!provider) {
         return QString();
     }
 
-    auto *local = qobject_cast<LocalModelProvider *>(provider);
-    if (!local) {
-        return QString();
-    }
-
-    return local->apiKey();
+    return provider->apiKey();
 }
 
-void AgentKernel::setLocalApiKey(const QString &key)
+void AgentKernel::setApiKey(const QString &key)
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (local && local->apiKey() != key) {
-        local->setApiKey(key);
-        emit localApiKeyChanged(key);
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (provider && provider->apiKey() != key) {
+        provider->setApiKey(key);
+        emit apiKeyChanged(key);
     }
 }
 
-void AgentKernel::testLocalConnection()
+void AgentKernel::testConnection()
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
-    if (!local) {
-        emit connectionTestResult(false, QStringLiteral("Local provider not found"));
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (!provider) {
+        emit connectionTestResult(false, QStringLiteral("OpenAI provider not found"));
         return;
     }
 
     static bool connected = false;
     if (!connected) {
-        connect(local, &LocalModelProvider::connectionTestFinished,
+        connect(provider, &OpenAICompatProvider::connectionTestFinished,
                 this, &AgentKernel::onConnectionTestFinished);
         connected = true;
     }
 
-    local->testConnection();
+    provider->testConnection();
 }
 
 void AgentKernel::onConnectionTestFinished(bool success, const QString &message)

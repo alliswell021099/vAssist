@@ -13,9 +13,9 @@ class AgentKernel : public QObject
 
     Q_PROPERTY(QString currentProviderName READ currentProviderName NOTIFY currentProviderNameChanged)
     Q_PROPERTY(QStringList providerNames READ providerNames NOTIFY providerNamesChanged)
-    Q_PROPERTY(QString localApiBase READ localApiBase WRITE setLocalApiBase NOTIFY localApiBaseChanged)
-    Q_PROPERTY(QString localModelName READ localModelName WRITE setLocalModelName NOTIFY localModelNameChanged)
-    Q_PROPERTY(QString localApiKey READ localApiKey WRITE setLocalApiKey NOTIFY localApiKeyChanged)
+    Q_PROPERTY(QString apiBase READ apiBase WRITE setApiBase NOTIFY apiBaseChanged)
+    Q_PROPERTY(QString modelName READ modelName WRITE setModelName NOTIFY modelNameChanged)
+    Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY apiKeyChanged)
 
 public:
     explicit AgentKernel(QObject *parent = nullptr);
@@ -27,16 +27,16 @@ public:
 
     Q_INVOKABLE bool switchProvider(const QString &name);
 
-    Q_INVOKABLE QString localApiBase() const;
-    Q_INVOKABLE void setLocalApiBase(const QString &url);
+    Q_INVOKABLE QString apiBase() const;
+    Q_INVOKABLE void setApiBase(const QString &url);
 
-    Q_INVOKABLE QString localModelName() const;
-    Q_INVOKABLE void setLocalModelName(const QString &name);
+    Q_INVOKABLE QString modelName() const;
+    Q_INVOKABLE void setModelName(const QString &name);
 
-    Q_INVOKABLE QString localApiKey() const;
-    Q_INVOKABLE void setLocalApiKey(const QString &key);
+    Q_INVOKABLE QString apiKey() const;
+    Q_INVOKABLE void setApiKey(const QString &key);
 
-    Q_INVOKABLE void testLocalConnection();
+    Q_INVOKABLE void testConnection();
 
 signals:
     void chatMessageReady(const QString &sender, const QString &text);
@@ -47,9 +47,9 @@ signals:
 
     void currentProviderNameChanged(const QString &name);
     void providerNamesChanged(const QStringList &names);
-    void localApiBaseChanged(const QString &url);
-    void localModelNameChanged(const QString &name);
-    void localApiKeyChanged(const QString &key);
+    void apiBaseChanged(const QString &url);
+    void modelNameChanged(const QString &name);
+    void apiKeyChanged(const QString &key);
     void connectionTestResult(bool success, const QString &message);
 
 private slots:

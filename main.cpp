@@ -1,7 +1,7 @@
 #include "core/agent/AgentKernel.h"
 #include "core/providers/ProviderManager.h"
 #include "core/providers/MockProvider.h"
-#include "core/providers/LocalModelProvider.h"
+#include "core/providers/OpenAICompatProvider.h"
 
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     ProviderManager::instance().registerProvider<MockProvider>();
-    ProviderManager::instance().registerProvider<LocalModelProvider>();
+    ProviderManager::instance().registerProvider<OpenAICompatProvider>();
 
     AgentKernel agentKernel;
 
