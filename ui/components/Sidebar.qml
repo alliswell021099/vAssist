@@ -186,7 +186,7 @@ Item {
             width: isCollapsed ? root.iconSize : parent.width
             theme: root.theme
             iconText: "⌕"
-            label: qsTr("搜索对话")
+            label: qsTr("搜索对话内容")
             collapsed: root.isCollapsed
             iconSize: root.iconSize
         }

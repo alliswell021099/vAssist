@@ -155,6 +155,7 @@ ApplicationWindow {
     function createNewConversation() {
         saveCurrentConversation();
         resetStreamingMessage();
+        currentConversationIndex = -1;
 
         const conversationId = nextConversationId();
         chatHistoryModel.insert(0, {
@@ -393,6 +394,14 @@ ApplicationWindow {
                 }
                 onCollapseToggled: root.sidebarCollapsed = !root.sidebarCollapsed
             }
+
+            MouseArea {
+                anchors.fill: parent
+                z: 10
+                visible: settingsPopup.visible
+                enabled: settingsPopup.visible
+                onClicked: settingsPopup.visible = false
+            }
         }
 
         Item {
@@ -512,13 +521,53 @@ ApplicationWindow {
     Popup {
         id: settingsPopup
         parent: Overlay.overlay
-        x: sidebarContainer.x + width - 35
-        y: parent.height - height - 56
-        width: sidebarContainer.width - 16
-        height: 420
+        readonly property real settingsButtonX: sidebarContainer.x + 16 + (root.sidebarCollapsed ? 0 : 216)
+        readonly property real settingsButtonY: parent.height - 16 - 76 + (root.sidebarCollapsed ? 0 : 44)
+
+        x: Math.min(parent.width - width - 12, Math.max(12, settingsButtonX))
+        y: Math.max(12, settingsButtonY - height - 8)
+        width: 280
+        height: Math.min(parent.height - 96, settingsMenuContent.implicitHeight)
         modal: false
         focus: false
         closePolicy: Popup.CloseOnEscape
+        transformOrigin: Item.BottomLeft
+
+        enter: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: 140
+                easing.type: Easing.OutCubic
+            }
+
+            NumberAnimation {
+                property: "scale"
+                from: 0.96
+                to: 1.0
+                duration: 140
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        exit: Transition {
+            NumberAnimation {
+                property: "opacity"
+                from: 1.0
+                to: 0.0
+                duration: 100
+                easing.type: Easing.InCubic
+            }
+
+            NumberAnimation {
+                property: "scale"
+                from: 1.0
+                to: 0.98
+                duration: 100
+                easing.type: Easing.InCubic
+            }
+        }
 
         background: Rectangle {
             color: root.isDarkTheme ? "#252526" : "#ffffff"
@@ -528,6 +577,7 @@ ApplicationWindow {
         }
 
         SettingsMenu {
+            id: settingsMenuContent
             anchors.fill: parent
             theme: root.theme
             isDarkTheme: root.isDarkTheme

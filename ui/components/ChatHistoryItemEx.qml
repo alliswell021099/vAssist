@@ -6,9 +6,8 @@ Item {
     id: root
 
     required property var theme
-    required property int index
-    required property string title
-    required property bool pinned
+    property string title: ""
+    property bool pinned: false
     property bool selected: false
     property bool collapsed: false
 

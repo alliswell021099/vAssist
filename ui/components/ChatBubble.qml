@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 
 Column {
     id: root
@@ -51,14 +52,14 @@ Column {
             width: root.actualBubbleWidth
             anchors.right: root.isUser ? parent.right : undefined
             anchors.left: root.isUser ? undefined : parent.left
-            height: messageText.implicitHeight + 28
+            height: messageText.contentHeight + 28
             radius: root.isUser ? 20 : 16
             color: root.isUser ? theme.bubbleUser
                                : (root.isTool ? theme.chip : theme.bubbleAssistant)
             border.color: root.isUser ? "transparent" : theme.divider
             border.width: root.isUser ? 0 : 1
 
-            Text {
+            TextEdit {
                 id: messageText
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -69,9 +70,45 @@ Column {
                 text: root.text
                 color: theme.textPrimary
                 font.pixelSize: 15
-                lineHeight: 1.45
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                wrapMode: TextEdit.Wrap
                 horizontalAlignment: Text.AlignLeft
+                readOnly: true
+                selectByMouse: true
+                activeFocusOnPress: true
+                persistentSelection: true
+                textFormat: TextEdit.PlainText
+                selectionColor: theme.accent
+                selectedTextColor: "#ffffff"
+
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: {
+                        messageText.forceActiveFocus();
+                        textMenu.popup();
+                    }
+                }
+            }
+
+            Menu {
+                id: textMenu
+
+                MenuItem {
+                    text: messageText.selectedText.length > 0 ? qsTr("复制") : qsTr("复制全文")
+                    onTriggered: {
+                        if (messageText.selectedText.length === 0) {
+                            messageText.selectAll();
+                        }
+                        messageText.copy();
+                    }
+                }
+
+                MenuItem {
+                    text: qsTr("全选")
+                    onTriggered: {
+                        messageText.forceActiveFocus();
+                        messageText.selectAll();
+                    }
+                }
             }
         }
     }

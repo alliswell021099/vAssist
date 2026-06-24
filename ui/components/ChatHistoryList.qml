@@ -29,10 +29,10 @@ Item {
 
         ScrollBar.vertical: ScrollBar {
             id: historyScrollBar
-            policy: ScrollBar.AsNeeded
+            policy: ScrollBar.AlwaysOff
             width: 4
-            opacity: (historyList.isHovered || historyScrollBar.pressed) ? 1.0 : 0.0
-            visible: !root.collapsed
+            opacity: 0
+            visible: false
 
             background: Rectangle { color: "transparent" }
             contentItem: Rectangle { color: "#3a3a3a"; radius: 2 }
@@ -47,16 +47,30 @@ Item {
             onExited: historyList.isHovered = false
         }
 
-        delegate: ChatHistoryItemEx {
+        delegate: Item {
+            id: delegateRoot
+
+            required property int index
+            required property string title
+            required property bool pinned
+
             width: historyList.width
-            theme: root.theme
-            selected: index === root.currentIndex
-            collapsed: root.collapsed
-            onClicked: root.conversationSelected(index)
-            onDeleteRequested: root.conversationDeleted(index)
-            onRenamed: function(newName) { root.conversationRenamed(index, newName) }
-            onPinChanged: function(pinned) { root.conversationPinned(index, pinned) }
-            onShared: root.conversationShared(index)
+            height: historyItem.height
+
+            ChatHistoryItemEx {
+                id: historyItem
+                width: parent.width
+                theme: root.theme
+                title: delegateRoot.title
+                selected: delegateRoot.index === root.currentIndex
+                collapsed: root.collapsed
+                pinned: delegateRoot.pinned
+                onClicked: root.conversationSelected(delegateRoot.index)
+                onDeleteRequested: root.conversationDeleted(delegateRoot.index)
+                onRenamed: function(newName) { root.conversationRenamed(delegateRoot.index, newName) }
+                onPinChanged: function(pinned) { root.conversationPinned(delegateRoot.index, pinned) }
+                onShared: root.conversationShared(delegateRoot.index)
+            }
         }
     }
 }
