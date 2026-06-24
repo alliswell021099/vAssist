@@ -16,10 +16,10 @@ int main(int argc, char *argv[])
     ProviderManager::instance().registerProvider<MockProvider>();
     ProviderManager::instance().registerProvider<LocalModelProvider>();
 
+    AgentKernel agentKernel;
+
     QQmlApplicationEngine engine;
     engine.addImportPath(QStringLiteral("qrc:/ui"));
-
-    AgentKernel agentKernel;
     engine.rootContext()->setContextProperty(QStringLiteral("agentKernel"), &agentKernel);
 
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));

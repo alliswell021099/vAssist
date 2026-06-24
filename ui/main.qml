@@ -19,7 +19,7 @@ ApplicationWindow {
     property bool isDarkTheme: false
     property bool sidebarCollapsed: false
     property real sidebarWidth: 280
-    property string activeModelLabel: qsTr("vAssist 1.0 Flash")
+    property string activeModelLabel: qsTr("vAssist 1.0")
 
     Behavior on sidebarWidth {
         NumberAnimation {
@@ -582,9 +582,7 @@ ApplicationWindow {
             theme: root.theme
             isDarkTheme: root.isDarkTheme
             currentThemeIndex: root.isDarkTheme ? 2 : 1
-            localApiBase: agentKernel.localApiBase
-            localModelName: agentKernel.localModelName
-            localApiKey: agentKernel.localApiKey
+            currentModelName: root.activeModelLabel
 
             onThemeSelectionChanged: {
                 if (index === 0) {
@@ -595,35 +593,67 @@ ApplicationWindow {
                 }
             }
 
+            onModelSettingsRequested: {
+                settingsPopup.visible = false
+                openModelSettingsDialog()
+            }
+        }
+    }
+
+    Component {
+        id: modelSettingsDialogComponent
+        ModelSettingsDialog {
+            theme: root.theme
+            isDarkTheme: root.isDarkTheme
+            apiBase: agentKernel.localApiBase
+            modelName: agentKernel.localModelName
+            apiKey: agentKernel.localApiKey
+
             onTestConnectionRequested: {
-                agentKernel.localApiBase = settingsMenuContent.localApiBase
-                agentKernel.localModelName = settingsMenuContent.localModelName
-                agentKernel.localApiKey = settingsMenuContent.localApiKey
+                agentKernel.localApiBase = apiBase
+                agentKernel.localModelName = modelName
+                agentKernel.localApiKey = apiKey
                 agentKernel.testLocalConnection()
             }
 
-            onApplyAndSwitchLocalRequested: function(apiBase, modelName, apiKey) {
+            onApplyAndSwitchRequested: function(apiBase, modelName, apiKey) {
                 agentKernel.localApiBase = apiBase
                 agentKernel.localModelName = modelName
                 agentKernel.localApiKey = apiKey
                 agentKernel.switchProvider("Local")
                 root.activeModelLabel = modelName
-                settingsPopup.visible = false
             }
 
-            onSwitchToMockRequested: {
+            onSwitchMockRequested: {
                 agentKernel.switchProvider("Mock")
                 root.activeModelLabel = "Mock"
-                settingsPopup.visible = false
             }
         }
+    }
 
-        Connections {
-            target: agentKernel
+    property var modelSettingsDialog: null
 
-            function onConnectionTestResult(success, message) {
-                settingsMenuContent.connectionOk = success
-                settingsMenuContent.connectionStatus = message
+    function openModelSettingsDialog() {
+        if (modelSettingsDialog) {
+            modelSettingsDialog.requestActivate()
+            return
+        }
+        modelSettingsDialog = modelSettingsDialogComponent.createObject(root)
+        modelSettingsDialog.show()
+
+        modelSettingsDialog.closing.connect(function() {
+            modelSettingsDialog.destroy()
+            modelSettingsDialog = null
+        })
+    }
+
+    Connections {
+        target: agentKernel
+
+        function onConnectionTestResult(success, message) {
+            if (modelSettingsDialog) {
+                modelSettingsDialog.connectionOk = success
+                modelSettingsDialog.connectionStatus = message
             }
         }
     }

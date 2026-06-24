@@ -90,11 +90,16 @@ void AgentKernel::setLocalModelName(const QString &name)
 
 QString AgentKernel::localApiKey() const
 {
-    auto *local = qobject_cast<LocalModelProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("Local")));
+    LLMProvider *provider = ProviderManager::instance().provider(QStringLiteral("Local"));
+    if (!provider) {
+        return QString();
+    }
+
+    auto *local = qobject_cast<LocalModelProvider *>(provider);
     if (!local) {
         return QString();
     }
+
     return local->apiKey();
 }
 
