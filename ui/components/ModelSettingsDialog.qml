@@ -328,27 +328,61 @@ Window {
 
                     readonly property real contentWidth: width
 
-                    Column {
+                    Item {
                         width: detailColumn.contentWidth
-                        spacing: 4
+                        height: titleText.height + descText.height + 4
 
                         Text {
+                            id: titleText
                             text: isAddingProvider ? qsTr("添加模型供应商") : qsTr("供应商设置")
                             color: root.theme.textPrimary
                             font.pixelSize: 15
                             font.weight: Font.Bold
                         }
 
+                        Rectangle {
+                            id: deleteBtn
+                            width: 72
+                            height: 24
+                            radius: 4
+                            color: deleteBtnMouse.pressed ? "#d93025" : "#ea4335"
+                            visible: !isAddingProvider && !isCurrentProviderPreset()
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: qsTr("删除")
+                                color: "#ffffff"
+                                font.pixelSize: 11
+                                font.weight: Font.Medium
+                            }
+
+                            MouseArea {
+                                id: deleteBtnMouse
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (!root.providerSettings) return
+                                    root.providerSettings.deleteProvider(selectedProviderId)
+                                    root.selectedProviderId = ""
+                                }
+                            }
+                        }
+
                         Text {
+                            id: descText
                             text: isAddingProvider
                                   ? qsTr("配置一个完全自定义的 API 端点和初始模型。")
                                   : (isCurrentProviderPreset()
                                      ? qsTr("MockProvider 是内置测试供应商，不需要配置。")
-                                     : qsTr("可保存 Base URL、API Key 和默认模型，也可以删除该供应商。"))
+                                     : qsTr("可保存 Base URL、API Key 和默认模型。"))
                             color: root.theme.textSecondary
                             font.pixelSize: 11
                             wrapMode: Text.WordWrap
                             width: parent.width
+                            anchors.top: titleText.bottom
+                            anchors.topMargin: 4
                         }
                     }
 
@@ -747,34 +781,6 @@ Window {
                                     if (!root.providerSettings || isCurrentActive()) return
                                     root.providerSettings.setActiveProviderId(selectedProviderId)
                                     root.close()
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            id: deleteBtn
-                            Layout.fillWidth: true
-                            height: 32
-                            radius: 4
-                            color: deleteBtnMouse.pressed ? "#d93025" : "#ea4335"
-                            visible: !isAddingProvider && !isCurrentProviderPreset()
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: qsTr("删除供应商")
-                                color: "#ffffff"
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                            }
-
-                            MouseArea {
-                                id: deleteBtnMouse
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (!root.providerSettings) return
-                                    root.providerSettings.deleteProvider(selectedProviderId)
-                                    root.selectedProviderId = ""
                                 }
                             }
                         }

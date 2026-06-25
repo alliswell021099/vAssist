@@ -304,10 +304,11 @@ Item {
                                     elide: Text.ElideRight
                                 }
 
-                                Text {
-                                    text: model.isActive ? "✓" : ""
+                                Rectangle {
+                                    width: 6
+                                    height: 6
+                                    radius: 3
                                     color: model.isActive && theme ? theme.accent : "transparent"
-                                    font.pixelSize: 14
                                     Layout.alignment: Qt.AlignRight
                                 }
                             }
@@ -326,8 +327,8 @@ Item {
 
             Rectangle {
                 id: manageRect
-                width: parent.width
-                height: 32
+                Layout.fillWidth: true
+                Layout.preferredHeight: 32
                 radius: 5
                 color: mouseArea2.containsMouse && theme ? theme.sidebarHover : "transparent"
 

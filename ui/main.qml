@@ -476,7 +476,10 @@ ApplicationWindow {
                             onSendRequested: root.sendCurrentMessage()
                             onAttachRequested: console.log("attach requested")
                             onVoiceRequested: console.log("voice requested")
-                            onModelSelectorClicked: openModelSettingsDialog()
+                            onModelSelectorClicked: {
+                                console.log("main.qml: modelSelectorClicked received")
+                                openModelSettingsDialog()
+                            }
                             onModelSelected: function(providerId, modelName) {
                                 agentKernel.providerSettings.setActiveProviderId(providerId)
                                 agentKernel.providerSettings.setProviderActiveModel(providerId, modelName)
