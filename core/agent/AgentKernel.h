@@ -6,6 +6,7 @@
 #include <QStringList>
 
 #include "core/providers/LLMProvider.h"
+#include "core/settings/ProviderSettings.h"
 
 class AgentKernel : public QObject
 {
@@ -13,9 +14,7 @@ class AgentKernel : public QObject
 
     Q_PROPERTY(QString currentProviderName READ currentProviderName NOTIFY currentProviderNameChanged)
     Q_PROPERTY(QStringList providerNames READ providerNames NOTIFY providerNamesChanged)
-    Q_PROPERTY(QString apiBase READ apiBase WRITE setApiBase NOTIFY apiBaseChanged)
-    Q_PROPERTY(QString modelName READ modelName WRITE setModelName NOTIFY modelNameChanged)
-    Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY apiKeyChanged)
+    Q_PROPERTY(ProviderSettings* providerSettings READ providerSettings CONSTANT)
 
 public:
     explicit AgentKernel(QObject *parent = nullptr);
@@ -27,16 +26,9 @@ public:
 
     Q_INVOKABLE bool switchProvider(const QString &name);
 
-    Q_INVOKABLE QString apiBase() const;
-    Q_INVOKABLE void setApiBase(const QString &url);
-
-    Q_INVOKABLE QString modelName() const;
-    Q_INVOKABLE void setModelName(const QString &name);
-
-    Q_INVOKABLE QString apiKey() const;
-    Q_INVOKABLE void setApiKey(const QString &key);
-
     Q_INVOKABLE void testConnection();
+
+    ProviderSettings* providerSettings() const { return m_providerSettings; }
 
 signals:
     void chatMessageReady(const QString &sender, const QString &text);
@@ -47,9 +39,6 @@ signals:
 
     void currentProviderNameChanged(const QString &name);
     void providerNamesChanged(const QStringList &names);
-    void apiBaseChanged(const QString &url);
-    void modelNameChanged(const QString &name);
-    void apiKeyChanged(const QString &key);
     void connectionTestResult(bool success, const QString &message);
 
 private slots:
@@ -57,12 +46,15 @@ private slots:
     void onProviderFinished(const QString &fullResponse);
     void onProviderError(const QString &error);
     void onConnectionTestFinished(bool success, const QString &message);
+    void onActiveProviderChanged();
 
 private:
     void setActiveProvider(LLMProvider *provider);
+    void applyActiveProviderConfig();
 
     LLMProvider *m_activeProvider = nullptr;
     QString m_streamingResponse;
     bool m_hasStreamingResponse = false;
     QString m_currentProviderName;
+    ProviderSettings *m_providerSettings = nullptr;
 };

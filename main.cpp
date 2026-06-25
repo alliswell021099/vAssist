@@ -7,6 +7,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQmlEngine>
 #include <QtGlobal>
 
 int main(int argc, char *argv[])
@@ -16,11 +17,12 @@ int main(int argc, char *argv[])
     ProviderManager::instance().registerProvider<MockProvider>();
     ProviderManager::instance().registerProvider<OpenAICompatProvider>();
 
-    AgentKernel agentKernel;
+    auto *agentKernel = new AgentKernel(&app);
+    QQmlEngine::setObjectOwnership(agentKernel, QQmlEngine::CppOwnership);
 
     QQmlApplicationEngine engine;
     engine.addImportPath(QStringLiteral("qrc:/ui"));
-    engine.rootContext()->setContextProperty(QStringLiteral("agentKernel"), &agentKernel);
+    engine.rootContext()->setContextProperty(QStringLiteral("agentKernel"), agentKernel);
 
     const QUrl url(QStringLiteral("qrc:/ui/main.qml"));
 #if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)

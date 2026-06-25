@@ -274,11 +274,13 @@ ApplicationWindow {
         if (streamingMessageIndex < 0 || streamingMessageIndex >= chatModel.count) {
             chatModel.append({ sender: "assistant", text: token });
             streamingMessageIndex = chatModel.count - 1;
+            Qt.callLater(function() { chatList.positionViewAtEnd(); });
             return;
         }
 
         const currentText = chatModel.get(streamingMessageIndex).text;
         chatModel.setProperty(streamingMessageIndex, "text", currentText + token);
+        Qt.callLater(function() { chatList.positionViewAtEnd(); });
     }
 
     function finishAssistantStream(fullResponse) {
@@ -333,6 +335,28 @@ ApplicationWindow {
         }
 
         conversationIdCounter = demoSessions.length;
+
+        if (agentKernel && agentKernel.providerSettings) {
+            const ps = agentKernel.providerSettings
+            const config = ps.activeProviderConfig()
+            if (config && config.model) {
+                root.activeModelLabel = config.model
+            } else if (config && config.name) {
+                root.activeModelLabel = qsTr("未选择模型")
+            }
+            ps.activeProviderIdChanged.connect(updateModelLabel)
+            ps.activeModelChanged.connect(updateModelLabel)
+        }
+    }
+
+    function updateModelLabel() {
+        if (!agentKernel || !agentKernel.providerSettings) return
+        const config = agentKernel.providerSettings.activeProviderConfig()
+        if (config && config.model) {
+            root.activeModelLabel = config.model
+        } else if (config && config.name) {
+            root.activeModelLabel = qsTr("未选择模型")
+        }
     }
 
     Connections {
@@ -444,12 +468,20 @@ ApplicationWindow {
 
                         InputPill {
                             id: welcomeInput
-                            width: parent.width
+                            width: Math.min(parent.width - 112, 820)
+                            anchors.horizontalCenter: parent.horizontalCenter
                             theme: root.theme
                             modelLabel: root.activeModelLabel
+                            providerSettings: agentKernel.providerSettings
                             onSendRequested: root.sendCurrentMessage()
                             onAttachRequested: console.log("attach requested")
                             onVoiceRequested: console.log("voice requested")
+                            onModelSelectorClicked: openModelSettingsDialog()
+                            onModelSelected: function(providerId, modelName) {
+                                agentKernel.providerSettings.setActiveProviderId(providerId)
+                                agentKernel.providerSettings.setProviderActiveModel(providerId, modelName)
+                                agentKernel.providerSettings.save()
+                            }
                         }
                     }
 
@@ -494,9 +526,16 @@ ApplicationWindow {
                         width: Math.min(parent.width - 112, 820)
                         theme: root.theme
                         modelLabel: root.activeModelLabel
+                        providerSettings: agentKernel.providerSettings
                         onSendRequested: root.sendCurrentMessage()
                         onAttachRequested: console.log("attach requested")
                         onVoiceRequested: console.log("voice requested")
+                        onModelSelectorClicked: openModelSettingsDialog()
+                        onModelSelected: function(providerId, modelName) {
+                            agentKernel.providerSettings.setActiveProviderId(providerId)
+                            agentKernel.providerSettings.setProviderActiveModel(providerId, modelName)
+                            agentKernel.providerSettings.save()
+                        }
                     }
                 }
             }
@@ -605,29 +644,7 @@ ApplicationWindow {
         ModelSettingsDialog {
             theme: root.theme
             isDarkTheme: root.isDarkTheme
-            apiBase: agentKernel.apiBase
-            modelName: agentKernel.modelName
-            apiKey: agentKernel.apiKey
-
-            onTestConnectionRequested: {
-                agentKernel.apiBase = apiBase
-                agentKernel.modelName = modelName
-                agentKernel.apiKey = apiKey
-                agentKernel.testConnection()
-            }
-
-            onApplyAndSwitchRequested: function(apiBase, modelName, apiKey) {
-                agentKernel.apiBase = apiBase
-                agentKernel.modelName = modelName
-                agentKernel.apiKey = apiKey
-                agentKernel.switchProvider("OpenAI")
-                root.activeModelLabel = modelName
-            }
-
-            onSwitchMockRequested: {
-                agentKernel.switchProvider("Mock")
-                root.activeModelLabel = "Mock"
-            }
+            providerSettings: agentKernel.providerSettings
         }
     }
 
@@ -646,15 +663,6 @@ ApplicationWindow {
             modelSettingsDialog = null
         })
     }
-
-    Connections {
-        target: agentKernel
-
-        function onConnectionTestResult(success, message) {
-            if (modelSettingsDialog) {
-                modelSettingsDialog.connectionOk = success
-                modelSettingsDialog.connectionStatus = message
-            }
-        }
-    }
 }
+
+

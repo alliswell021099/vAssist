@@ -2,6 +2,7 @@
 
 #include "core/providers/ProviderManager.h"
 #include "core/providers/OpenAICompatProvider.h"
+#include "core/settings/ProviderSettings.h"
 
 #include <QJsonDocument>
 #include <QJsonParseError>
@@ -9,7 +10,41 @@
 AgentKernel::AgentKernel(QObject *parent)
     : QObject(parent)
 {
+    m_providerSettings = new ProviderSettings(this);
+    connect(m_providerSettings, &ProviderSettings::activeProviderIdChanged,
+            this, &AgentKernel::onActiveProviderChanged);
+    connect(m_providerSettings, &ProviderSettings::activeModelChanged,
+            this, &AgentKernel::onActiveProviderChanged);
+
     switchProvider(QStringLiteral("Mock"));
+    onActiveProviderChanged();
+}
+
+void AgentKernel::onActiveProviderChanged()
+{
+    applyActiveProviderConfig();
+}
+
+void AgentKernel::applyActiveProviderConfig()
+{
+    if (!m_providerSettings) return;
+
+    const auto config = m_providerSettings->activeProviderConfig();
+    if (config.isEmpty()) return;
+
+    if (config["apiFormat"].toString() == QStringLiteral("mock")) {
+        switchProvider(QStringLiteral("Mock"));
+        return;
+    }
+
+    auto *provider = qobject_cast<OpenAICompatProvider *>(
+        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
+    if (!provider) return;
+
+    provider->setApiBase(config["baseUrl"].toString());
+    provider->setModelName(config["model"].toString());
+    provider->setApiKey(config["apiKey"].toString());
+    switchProvider(QStringLiteral("OpenAI"));
 }
 
 void AgentKernel::sendMessage(const QString &msg)
@@ -46,71 +81,6 @@ bool AgentKernel::switchProvider(const QString &name)
     m_currentProviderName = name;
     emit currentProviderNameChanged(name);
     return true;
-}
-
-QString AgentKernel::apiBase() const
-{
-    auto *provider = qobject_cast<OpenAICompatProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
-    if (!provider) {
-        return QStringLiteral("http://localhost:11434/v1");
-    }
-    return provider->apiBase();
-}
-
-void AgentKernel::setApiBase(const QString &url)
-{
-    auto *provider = qobject_cast<OpenAICompatProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
-    if (provider && provider->apiBase() != url) {
-        provider->setApiBase(url);
-        emit apiBaseChanged(url);
-    }
-}
-
-QString AgentKernel::modelName() const
-{
-    auto *provider = qobject_cast<OpenAICompatProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
-    if (!provider) {
-        return QStringLiteral("qwen2.5:7b");
-    }
-    return provider->modelName();
-}
-
-void AgentKernel::setModelName(const QString &name)
-{
-    auto *provider = qobject_cast<OpenAICompatProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
-    if (provider && provider->modelName() != name) {
-        provider->setModelName(name);
-        emit modelNameChanged(name);
-    }
-}
-
-QString AgentKernel::apiKey() const
-{
-    LLMProvider *p = ProviderManager::instance().provider(QStringLiteral("OpenAI"));
-    if (!p) {
-        return QString();
-    }
-
-    auto *provider = qobject_cast<OpenAICompatProvider *>(p);
-    if (!provider) {
-        return QString();
-    }
-
-    return provider->apiKey();
-}
-
-void AgentKernel::setApiKey(const QString &key)
-{
-    auto *provider = qobject_cast<OpenAICompatProvider *>(
-        ProviderManager::instance().provider(QStringLiteral("OpenAI")));
-    if (provider && provider->apiKey() != key) {
-        provider->setApiKey(key);
-        emit apiKeyChanged(key);
-    }
 }
 
 void AgentKernel::testConnection()

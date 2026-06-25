@@ -19,6 +19,8 @@ qt_add_executable(vAssist
     core/providers/MockProvider.h
     core/providers/OpenAICompatProvider.cpp
     core/providers/OpenAICompatProvider.h
+    core/settings/ProviderSettings.cpp
+    core/settings/ProviderSettings.h
     resources.qrc
 )
 

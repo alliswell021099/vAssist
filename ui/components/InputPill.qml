@@ -9,18 +9,54 @@ Item {
     property alias placeholderText: messageInput.placeholderText
     property string modelLabel: "Mock"
     property var theme
+    property var providerSettings
 
     signal sendRequested()
     signal attachRequested()
     signal voiceRequested()
+    signal modelSelectorClicked()
+    signal modelSelected(string providerId, string modelName)
 
     function forceInputFocus() {
         messageInput.forceActiveFocus();
     }
 
+    function refreshModelList() {
+        modelList.clear()
+        if (!providerSettings) return
+        var providers = providerSettings.providers()
+        for (var i = 0; i < providers.length; i++) {
+            var provider = providers[i]
+            var models = providerSettings.modelsForProvider(provider.id)
+            for (var j = 0; j < models.length; j++) {
+                var isActive = providerSettings.activeProviderId === provider.id && providerSettings.activeModel === models[j]
+                modelList.append({
+                    providerId: provider.id,
+                    providerName: provider.name,
+                    modelName: models[j],
+                    isActive: isActive
+                })
+            }
+        }
+    }
+
+    ListModel {
+        id: modelList
+    }
+
     implicitWidth: 720
     implicitHeight: inputShell.height + 8
     height: implicitHeight
+
+    MouseArea {
+        anchors.fill: parent
+        z: 0
+        onClicked: {
+            if (modelPopup.visible) {
+                modelPopup.close()
+            }
+        }
+    }
 
     Rectangle {
         id: shadow
@@ -93,28 +129,54 @@ Item {
             }
 
             Rectangle {
+                id: modelChip
                 Layout.preferredHeight: 32
                 Layout.preferredWidth: modelRow.implicitWidth + 20
                 radius: 16
                 color: theme.chip
+                border.color: modelPopup.visible ? theme.accent : "transparent"
+                border.width: modelPopup.visible ? 1 : 0
 
                 Row {
                     id: modelRow
                     anchors.centerIn: parent
-                    spacing: 6
+                    spacing: 4
 
                     Text {
                         text: root.modelLabel
                         color: theme.textSecondary
                         font.pixelSize: 13
                         anchors.verticalCenter: parent.verticalCenter
+                        elide: Text.ElideRight
                     }
 
                     Text {
-                        text: "▾"
+                        text: modelPopup.visible ? "▴" : "▾"
                         color: theme.textMuted
                         font.pixelSize: 10
                         anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (modelPopup.visible) {
+                            modelPopup.close()
+                        } else {
+                            refreshModelList()
+                            var popupHeight = 200
+                            var globalPos = inputShell.mapToGlobal(Qt.point(0, 0))
+                            var inputBottomGlobal = globalPos.y + inputShell.height
+                            modelPopup.x = inputShell.width - 220 - 8
+                            if (inputBottomGlobal + popupHeight > Screen.height) {
+                                modelPopup.y = inputShell.y - popupHeight
+                            } else {
+                                modelPopup.y = inputShell.height + 4
+                            }
+                            modelPopup.open()
+                        }
                     }
                 }
             }
@@ -163,6 +225,139 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font.pixelSize: 16
+                }
+            }
+        }
+    }
+
+    Popup {
+        id: modelPopup
+        width: 220
+        height: 220
+        modal: false
+        focus: true
+        dim: false
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnOutsideClick
+
+        background: Rectangle {
+            color: theme ? theme.sidebar : "#ffffff"
+            radius: 10
+            border.color: theme ? theme.inputBorder : "#e0e0e0"
+            border.width: 1
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 0
+            spacing: 0
+
+            Text {
+                text: qsTr("选择模型")
+                color: theme ? theme.textPrimary : "#333333"
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                Layout.leftMargin: 12
+                Layout.topMargin: 12
+                Layout.bottomMargin: 4
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.maximumHeight: 130
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AlwaysOff
+                }
+
+                ListView {
+                    id: modelListView
+                    width: parent.width
+                    model: modelList
+                    spacing: 2
+
+                    delegate: Rectangle {
+                        id: itemRect
+                        width: modelListView.width
+                        height: 32
+                        radius: 5
+                        color: model.isActive && theme ? theme.accentLight : (mouseArea.containsMouse && theme ? theme.sidebarHover : "transparent")
+
+                        MouseArea {
+                            id: mouseArea
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                root.modelSelected(model.providerId, model.modelName)
+                                modelPopup.close()
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+
+                                Text {
+                                    text: model.modelName
+                                    color: model.isActive && theme ? theme.accent : (mouseArea.containsMouse && theme ? theme.textPrimary : (theme ? theme.textSecondary : "#666666"))
+                                    font.pixelSize: 13
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    text: model.isActive ? "✓" : ""
+                                    color: model.isActive && theme ? theme.accent : "transparent"
+                                    font.pixelSize: 14
+                                    Layout.alignment: Qt.AlignRight
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 1
+                color: theme ? theme.inputBorder : "#e0e0e0"
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                Layout.bottomMargin: 4
+            }
+
+            Rectangle {
+                id: manageRect
+                width: parent.width
+                height: 32
+                radius: 5
+                color: mouseArea2.containsMouse && theme ? theme.sidebarHover : "transparent"
+
+                MouseArea {
+                    id: mouseArea2
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.modelSelectorClicked()
+                        modelPopup.close()
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+
+                        Text {
+                            text: qsTr("管理模型")
+                            color: mouseArea2.containsMouse && theme ? theme.textPrimary : (theme ? theme.textSecondary : "#666666")
+                            font.pixelSize: 13
+                        }
+
+                        Text {
+                            text: "⚙"
+                            color: theme ? theme.textMuted : "#999999"
+                            font.pixelSize: 13
+                            Layout.alignment: Qt.AlignRight
+                        }
+                    }
                 }
             }
         }
